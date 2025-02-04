@@ -10,7 +10,7 @@ jobs:
 
     steps:
       - name: Install libgcrypt
-        run: apt install libgcrypt-dev
+        run: sudo apt install -y libgcrypt-dev
       - name: Checkout
         uses: actions/checkout@v4.2.2
       - name: Build
