@@ -1,4 +1,3 @@
-
 find_package(PkgConfig QUIET)
 pkg_check_modules(LIBGCRYPT libgcrypt)
 find_path(LIBGCRYPT_INCLUDE_DIR NAMES "gcrypt.h")
@@ -11,7 +10,6 @@ target_link_libraries(psafe ${LIBGCRYPT_LIBRARY})
 add_executable(psafedump psafe.c)
 target_link_libraries(psafedump PRIVATE psafe)
 
-enable_testing()
 add_executable(test_util test_util.c)
 target_link_libraries(test_util PRIVATE psafe)
-add_test(test_util test_util)
+add_test(NAME util COMMAND test_util)

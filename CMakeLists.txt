@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
 project(psafe)
+enable_testing()
 set(C_STANDARD 11)
 add_subdirectory(src)
