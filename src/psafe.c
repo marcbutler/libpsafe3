@@ -25,8 +25,9 @@ void stretch_key(const char *pass, size_t passlen,
     gcry_error_t gerr;
     gcry_md_hd_t sha256;
     gerr = gcry_md_open(&sha256, GCRY_MD_SHA256, GCRY_MD_FLAG_SECURE);
-    if (gerr != GPG_ERR_NO_ERROR)
+    if (gerr != GPG_ERR_NO_ERROR) {
         gcrypt_fatal(gerr);
+    }
 
     gcry_md_write(sha256, pass, passlen);
     gcry_md_write(sha256, pro->salt, 32);
@@ -49,8 +50,9 @@ void sha256_block32(const uint8_t *in, uint8_t *out)
     gcry_md_hd_t hd;
     gcry_error_t gerr;
     gerr = gcry_md_open(&hd, GCRY_MD_SHA256, GCRY_MD_FLAG_SECURE);
-    if (gerr != GPG_ERR_NO_ERROR)
+    if (gerr != GPG_ERR_NO_ERROR) {
         gcrypt_fatal(gerr);
+    }
     gcry_md_write(hd, in, 32);
     gcry_md_final(hd);
     memmove(out, gcry_md_read(hd, 0), 32);
@@ -67,11 +69,13 @@ gcry_error_t extract_random_key(const uint8_t *stretchkey, const uint8_t *fst,
     gcry_cipher_hd_t hd;
     gerr = gcry_cipher_open(&hd, GCRY_CIPHER_TWOFISH, GCRY_CIPHER_MODE_ECB,
                             GCRY_CIPHER_SECURE);
-    if (gerr != GPG_ERR_NO_ERROR)
+    if (gerr != GPG_ERR_NO_ERROR) {
         return gerr;
+    }
     gerr = gcry_cipher_setkey(hd, stretchkey, 32);
-    if (gerr != GPG_ERR_NO_ERROR)
+    if (gerr != GPG_ERR_NO_ERROR) {
         return gerr;
+    }
     gcry_cipher_decrypt(hd, randkey, 16, fst, 16);
     gcry_cipher_reset(hd);
     gcry_cipher_decrypt(hd, randkey + 16, 16, snd, 16);
@@ -92,8 +96,9 @@ void print_time(uint8_t *val)
 void printhex(FILE *f, uint8_t *ptr, unsigned cnt)
 {
     unsigned i;
-    for (i = 0; i < cnt; i++)
+    for (i = 0; i < cnt; i++) {
         fwprintf(f, L"%02x", *ptr++);
+    }
 }
 
 void print_uuid(uint8_t *uuid)
@@ -171,25 +176,30 @@ int init_decrypt_ctx(struct crypto_ctx *ctx, struct psafe3_header *pro,
 
     gerr = gcry_cipher_open(&ctx->cipher, GCRY_CIPHER_TWOFISH,
                             GCRY_CIPHER_MODE_CBC, GCRY_CIPHER_SECURE);
-    if (gerr != GPG_ERR_NO_ERROR)
+    if (gerr != GPG_ERR_NO_ERROR) {
         goto err_cipher;
+    }
 
     ctx->gerr = gcry_cipher_setkey(ctx->cipher, sec->rand_k, 32);
-    if (gerr != GPG_ERR_NO_ERROR)
+    if (gerr != GPG_ERR_NO_ERROR) {
         goto err_cipher;
+    }
 
     ctx->gerr = gcry_cipher_setiv(ctx->cipher, pro->iv, 16);
-    if (gerr != GPG_ERR_NO_ERROR)
+    if (gerr != GPG_ERR_NO_ERROR) {
         goto err_cipher;
+    }
 
     gerr = gcry_md_open(&ctx->hmac, GCRY_MD_SHA256,
                         GCRY_MD_FLAG_SECURE | GCRY_MD_FLAG_HMAC);
-    if (gerr != GPG_ERR_NO_ERROR)
+    if (gerr != GPG_ERR_NO_ERROR) {
         goto err_hmac;
+    }
 
     gerr = gcry_md_setkey(ctx->hmac, sec->rand_l, 32);
-    if (gerr != GPG_ERR_NO_ERROR)
+    if (gerr != GPG_ERR_NO_ERROR) {
         goto err_hmac;
+    }
 
     return 0;
 
@@ -234,11 +244,14 @@ int stretch_and_check_pass(const char *pass, size_t passlen,
     stretch_key(pass, passlen, pro, sec->pprime);
     uint8_t hkey[32];
     sha256_block32(sec->pprime, hkey);
-    if (memcmp(pro->h_pprime, hkey, 32) != 0)
+    if (memcmp(pro->h_pprime, hkey, 32) != 0) {
         return -1;
+    }
     gcry_error_t gerr;
     gerr = extract_random_key(sec->pprime, pro->b[0], pro->b[1], sec->rand_k);
-    if (gerr != GPG_ERR_NO_ERROR) return gerr;
+    if (gerr != GPG_ERR_NO_ERROR) {
+        return gerr;
+    }
     gerr = extract_random_key(sec->pprime, pro->b[2], pro->b[3], sec->rand_l);
     return gerr;
 }
@@ -299,8 +312,9 @@ int main(int argc, char **argv)
 
     gcry_error_t      gerr;
     struct crypto_ctx ctx;
-    if (init_decrypt_ctx(&ctx, &hdr, sec) < 0)
+    if (init_decrypt_ctx(&ctx, &hdr, sec) < 0) {
         gcrypt_fatal(ctx.gerr);
+    }
 
     size_t bcnt;
     bcnt = safe_size / TWOFISH_BLOCK_SIZE;
@@ -309,14 +323,18 @@ int main(int argc, char **argv)
     uint8_t *safep;
     encp = ptr + 4 + sizeof(hdr);
     safep = safe;
-    while (bcnt-- && !safe_io->can_read(safe_io)) {
+    while (bcnt && safe_io->can_read(safe_io)) {
         gerr = gcry_cipher_decrypt(ctx.cipher, safep, TWOFISH_BLOCK_SIZE, encp,
                                    TWOFISH_BLOCK_SIZE);
-        if (gerr != GPG_ERR_NO_ERROR)
+        if (gerr != GPG_ERR_NO_ERROR) {
             gcrypt_fatal(gerr);
+        }
         safep += TWOFISH_BLOCK_SIZE;
         encp += TWOFISH_BLOCK_SIZE;
+        bcnt--;
     }
+    wprintf(L"bcnt==%lu\n", bcnt);
+    assert(bcnt == 0);
 
     enum { HDR, DB };
     int state = HDR;
@@ -334,10 +352,12 @@ int main(int argc, char **argv)
         putwc('\n', stdout);
         if (fld->len)
             gcry_md_write(ctx.hmac, safep + sizeof(*fld), fld->len);
-        safep += ((fld->len + 5 + 15) / TWOFISH_BLOCK_SIZE) * TWOFISH_BLOCK_SIZE;
+        safep +=
+            ((fld->len + 5 + 15) / TWOFISH_BLOCK_SIZE) * TWOFISH_BLOCK_SIZE;
     }
 
-    assert(memcmp(ptr + (sz - 48), "PWS3-EOFPWS3-EOF", TWOFISH_BLOCK_SIZE) == 0);
+    assert(memcmp(ptr + (sz - 48), "PWS3-EOFPWS3-EOF", TWOFISH_BLOCK_SIZE) ==
+           0);
 
 #define EOL() putwc('\n', stdout)
     EOL();
