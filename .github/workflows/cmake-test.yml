@@ -1,0 +1,20 @@
+name: Test
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+      - name: Build
+        uses: threeal/cmake-action@v2.1.0
+      - name: Test
+        uses: threeal/ctest-action@v1.1.0
+        with:
+          test-dir: build/src
+          build-config: Debug

@@ -3,9 +3,9 @@
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 
-/**
+/*
  * Load Little Endian 32 bit integer from memory location.
- * Memory is not required to be 4 byte aligned.
+ * Memory may be unaligned.
  */
 static inline uint32_t load_le32(void *mem)
 {
