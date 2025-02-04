@@ -3,7 +3,6 @@
 
 #include <gcrypt.h>
 
-
 /* Field header. */
 struct field {
     uint32_t len;
