@@ -9,7 +9,7 @@ add_subdirectory(util)
 add_subdirectory(psafe)
 
 add_executable(psafedump psafedump.c)
-target_link_libraries(psafedump PRIVATE psafe)
+target_link_libraries(psafedump PRIVATE psafe_static)
 
 add_executable(test_util test_util.c)
 target_link_libraries(test_util PRIVATE util)
