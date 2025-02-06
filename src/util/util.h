@@ -10,6 +10,8 @@
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 
+#define BYTE uint8_t
+
 /*
  * Load Little Endian 32 bit integer from memory location.
  * Memory may be unaligned.
