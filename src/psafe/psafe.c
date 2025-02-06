@@ -1,5 +1,3 @@
-/* Copyright 2013-present Marc Butler <moockbutler@gmail.com> */
-
 #include <assert.h>
 #include <err.h>
 #include <gcrypt.h>
@@ -13,14 +11,14 @@
 #include <unistd.h>
 #include <wchar.h>
 
+#include "util/util.h"
+
 #include "crypto.h"
-#include "ioport.h"
 #include "psafe.h"
 #include "pws3.h"
-#include "util.h"
 
 void stretch_key(const char *pass, size_t passlen,
-                 const struct psafe3_header *pro, uint8_t *skey)
+                 const struct pws3_header *pro, uint8_t *skey)
 {
     gcry_error_t gerr;
     gcry_md_hd_t sha256;
@@ -165,7 +163,7 @@ void db_print(FILE *f, struct field *fld)
     }
 }
 
-int init_decrypt_ctx(struct crypto_ctx *ctx, struct psafe3_header *pro,
+int init_decrypt_ctx(struct crypto_ctx *ctx, struct pws3_header *pro,
                      struct safe_sec *sec)
 {
     gcry_error_t gerr;
@@ -216,7 +214,7 @@ void term_decrypt_ctx(struct crypto_ctx *ctx)
     gcry_md_close(ctx->hmac);
 }
 
-void print_prologue(FILE *f, struct psafe3_header *pro)
+void print_prologue(FILE *f, struct pws3_header *pro)
 {
     int i;
 #define EOL() fputwc('\n', f)
@@ -239,7 +237,7 @@ void print_prologue(FILE *f, struct psafe3_header *pro)
 }
 
 int stretch_and_check_pass(const char *pass, size_t passlen,
-                           struct psafe3_header *pro, struct safe_sec *sec)
+                           struct pws3_header *pro, struct safe_sec *sec)
 {
     stretch_key(pass, passlen, pro, sec->pprime);
     uint8_t hkey[32];
@@ -254,139 +252,4 @@ int stretch_and_check_pass(const char *pass, size_t passlen,
     }
     gerr = extract_random_key(sec->pprime, pro->b[2], pro->b[3], sec->rand_l);
     return gerr;
-}
-
-int main(int argc, char **argv)
-{
-    int  ret;
-    char pass[100];
-    setlocale(LC_ALL, "");
-
-    if (argc != 2 && argc != 3) {
-        wprintf(L"Usage: psafe file.psafe3\n");
-        exit(EXIT_FAILURE);
-    }
-
-    if (argc == 3) {
-        strcpy(pass, argv[2]);
-    } else {
-        size_t passmax = sizeof(pass);
-        if (read_from_terminal("Password: ", pass, &passmax) != 0) {
-            wprintf(L"No password read.");
-            exit(EXIT_FAILURE);
-        }
-    }
-
-    crypto_init(64 * 1024);
-
-    struct ioport *safe_io = NULL;
-    if (ioport_mmap_open(argv[1], &safe_io) != 0) {
-        err(1, "%s", argv[1]);
-    }
-
-    struct ioport_mmap  *mmio = (void *)safe_io;
-    uint8_t             *ptr = mmio->mem;
-    size_t               sz = mmio->mem_size;
-    struct psafe3_header hdr;
-    if (pws3_read_header(safe_io, &hdr) != 0) {
-        fwprintf(stderr, L"Error reading header.");
-        exit(EXIT_FAILURE);
-    }
-
-    struct safe_sec *sec;
-    sec = gcry_malloc_secure(sizeof(*sec));
-    ret = stretch_and_check_pass(pass, strlen(pass), &hdr, sec);
-    if (ret != 0) {
-        gcry_free(sec);
-        wprintf(L"Invalid password.\n");
-        exit(1);
-    }
-
-    uint8_t *safe;
-    size_t   safe_size;
-    safe_size = sz - (4 + sizeof(hdr) + 48);
-    assert(safe_size > 0);
-    assert(safe_size % TWOFISH_BLOCK_SIZE == 0);
-    safe = gcry_malloc_secure(safe_size);
-    assert(safe != NULL);
-
-    gcry_error_t      gerr;
-    struct crypto_ctx ctx;
-    if (init_decrypt_ctx(&ctx, &hdr, sec) < 0) {
-        gcrypt_fatal(ctx.gerr);
-    }
-
-    size_t bcnt;
-    bcnt = safe_size / TWOFISH_BLOCK_SIZE;
-    assert(bcnt > 0);
-    uint8_t *encp;
-    uint8_t *safep;
-    encp = ptr + 4 + sizeof(hdr);
-    safep = safe;
-    while (bcnt && safe_io->can_read(safe_io)) {
-        gerr = gcry_cipher_decrypt(ctx.cipher, safep, TWOFISH_BLOCK_SIZE, encp,
-                                   TWOFISH_BLOCK_SIZE);
-        if (gerr != GPG_ERR_NO_ERROR) {
-            gcrypt_fatal(gerr);
-        }
-        safep += TWOFISH_BLOCK_SIZE;
-        encp += TWOFISH_BLOCK_SIZE;
-        bcnt--;
-    }
-    wprintf(L"bcnt==%lu\n", bcnt);
-    assert(bcnt == 0);
-
-    enum { HDR, DB };
-    int state = HDR;
-    safep = safe;
-    while (safep < safe + safe_size) {
-        struct field *fld;
-        fld = (struct field *)safep;
-        wprintf(L"len=%-3u  type=%02x  ", fld->len, fld->type);
-        if (state == DB)
-            db_print(stdout, fld);
-        else
-            hd_print(stdout, fld);
-        if (fld->type == 0xff)
-            state = DB;
-        putwc('\n', stdout);
-        if (fld->len)
-            gcry_md_write(ctx.hmac, safep + sizeof(*fld), fld->len);
-        safep +=
-            ((fld->len + 5 + 15) / TWOFISH_BLOCK_SIZE) * TWOFISH_BLOCK_SIZE;
-    }
-
-    assert(memcmp(ptr + (sz - 48), "PWS3-EOFPWS3-EOF", TWOFISH_BLOCK_SIZE) ==
-           0);
-
-#define EOL() putwc('\n', stdout)
-    EOL();
-    print_prologue(stdout, &hdr);
-    wprintf(L"KEY    ");
-    printhex(stdout, sec->pprime, 32);
-    EOL();
-    wprintf(L"H(KEY) ");
-    printhex(stdout, hdr.h_pprime, 32);
-    EOL();
-
-    gcry_md_final(ctx.hmac);
-    wprintf(L"HMAC'  ");
-    uint8_t hmac[32];
-    memmove(hmac, gcry_md_read(ctx.hmac, GCRY_MD_SHA256), 32);
-    printhex(stdout, hmac, 32);
-    EOL();
-
-    wprintf(L"HMAC   ");
-    printhex(stdout, ptr + (sz - 32), 32);
-    EOL();
-#undef EOL
-
-    gcry_free(safe);
-    gcry_free(sec);
-
-    safe_io->close(safe_io);
-    term_decrypt_ctx(&ctx);
-
-    crypto_term();
-    exit(0);
 }

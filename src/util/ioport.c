@@ -1,5 +1,3 @@
-/* Copyright 2024-present Marc Butler <moockbutler@gmail.com> */
-
 #include <assert.h>
 #include <fcntl.h>
 #include <stdlib.h>

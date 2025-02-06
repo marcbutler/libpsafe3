@@ -1,5 +1,4 @@
 #pragma once
-/* Copyright 2013-present Marc Butler <moockbutler@gmail.com> */
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -12,6 +11,8 @@ typedef struct ioport {
     int (*can_write)(struct ioport *port);
     off_t (*where)(struct ioport *port);
 } IOPort;
+
+#define IOPORT_CAN_READ(port) ((port)->can_read(port))
 
 int ioport_read_exactly(IOPort *port, void *buf, const size_t len);
 int ioport_read_le32(IOPort *port, uint32_t *val);

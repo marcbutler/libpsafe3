@@ -2,11 +2,10 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "ioport.h"
+#include "util/util.h"
 #include "pws3.h"
-#include "util.h"
 
-int pws3_read_header(IOPort *port, struct psafe3_header *hdr)
+int pws3_read_header(IOPort *port, pws3_header *hdr)
 {
     static const char MAGIC[] = {'P', 'W', 'S', '3'};
 
