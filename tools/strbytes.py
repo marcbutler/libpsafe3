@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# Generate byte arrays from strings.
+
 import sys
 
 

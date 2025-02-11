@@ -31,9 +31,9 @@ static inline uint32_t load_le32(void *mem)
 #define crash() crash_helper(__FILE__, __LINE__, __func__)
 
 #define crash_helper(path, line, func)                                         \
-    crash_actual(path ":" STRIFY(line) " ", func)
+    CrashActual(path ":" STRIFY(line) " ", func)
 
-void crash_actual(const char *path, const char *func);
+void CrashActual(const char *path, const char *func);
 
 void util_close_fd(int fd);
 

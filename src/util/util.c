@@ -10,13 +10,15 @@
 
 #include "util.h"
 
-void crash_actual(const char *path, const char *func)
+void CrashActual(const char *path, const char *func)
 {
-    fputws(L"CRASH ", stderr);
-    fputs(path, stderr);
-    fputs(func, stderr);
-    fputc('\n', stderr);
-    exit(EXIT_FAILURE);
+    /* FIXME See if arguments should be wide char. */
+    fwprintf(stderr, L"CRASH %s:%s\n", path, func);
+#ifdef NDEBUG
+    abort();
+#else
+    __builtin_debugtrap();
+#endif
 }
 
 void util_close_fd(int fd)

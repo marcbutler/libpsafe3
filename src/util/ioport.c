@@ -1,8 +1,8 @@
 #include <assert.h>
 #include <fcntl.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdint.h>
 #include <sys/errno.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -11,7 +11,8 @@
 
 #include "ioport.h"
 
-static int _mmap_read(IOPort *port, void *buf, const size_t len, size_t *actual)
+static int _mmap_read(struct ioport *port, void *buf, const size_t len,
+                      size_t *actual)
 {
     assert(port != NULL && buf != NULL && actual != NULL);
 
@@ -21,7 +22,7 @@ static int _mmap_read(IOPort *port, void *buf, const size_t len, size_t *actual)
     if (ctx->pos >= ctx->mem_size) {
         return 0;
     }
-    size_t    rdamt = MIN(ctx->mem_size - ctx->pos, len);
+    size_t rdamt = MIN(ctx->mem_size - ctx->pos, len);
     uintptr_t loc = (uintptr_t)ctx->mem + ctx->pos;
     memmove(buf, (void *)loc, rdamt);
     ctx->pos += len;
@@ -29,7 +30,7 @@ static int _mmap_read(IOPort *port, void *buf, const size_t len, size_t *actual)
     return 0;
 }
 
-static int _mmap_close(IOPort *port)
+static int _mmap_close(struct ioport *port)
 {
     assert(port != NULL);
 
@@ -45,14 +46,14 @@ static int _mmap_close(IOPort *port)
     return ret;
 }
 
-static int _mmap_can_read(IOPort *port)
+static int _mmap_can_read(struct ioport *port)
 {
     assert(port != NULL);
     struct ioport_mmap *ctx = (void *)port;
     return ctx->pos < ctx->mem_size;
 }
 
-int ioport_mmap_open(const char *path, IOPort **port)
+int ioport_mmap_open(const char *path, struct ioport **port)
 {
     assert(path != NULL && port != NULL);
 
@@ -99,9 +100,9 @@ close_on_err:
 /*
  * Read exact number of bytes from the port.
  */
-int ioport_read_exactly(IOPort *port, void *buf, const size_t len)
+int ioport_readn(struct ioport *port, void *buf, const size_t len)
 {
-    int    ret;
+    int ret;
     size_t rdamt;
 
     rdamt = 0;
@@ -111,7 +112,7 @@ int ioport_read_exactly(IOPort *port, void *buf, const size_t len)
     return ret;
 }
 
-int ioport_read_le32(IOPort *port, uint32_t *val)
+int ioport_readle32(struct ioport *port, uint32_t *val)
 {
     /*
      * Read little endian 32 bit integer.
@@ -119,7 +120,7 @@ int ioport_read_le32(IOPort *port, uint32_t *val)
     assert(port != NULL && val != NULL);
 
     size_t rdamt;
-    char   buf[4];
+    char buf[4];
     if (IOPORT_READ(port, buf, sizeof(buf), &rdamt) != 0 ||
         rdamt != sizeof(buf)) {
         return -1;

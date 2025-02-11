@@ -7,8 +7,8 @@
 /* Field header. */
 struct field {
     uint32_t len;
-    uint8_t  type;
-    uint8_t  val[];
+    uint8_t type;
+    uint8_t val[];
 } __attribute__((packed));
 
 /* Secure safe information. */
@@ -20,13 +20,30 @@ struct safe_sec {
 
 /* Cryptographic context */
 struct crypto_ctx {
-    gcry_error_t     gerr;
+    gcry_error_t gerr;
     gcry_cipher_hd_t cipher;
-    gcry_md_hd_t     hmac;
+    gcry_md_hd_t hmac;
 };
 
-int stretch_and_check_pass(const char *pass, size_t passlen,
-                           struct pws3_header *pro, struct safe_sec *sec);
+struct psafe3 {
+    uintmax_t attr;
+    struct safe_sec access;
+    struct crypto_ctx crypto;
+    struct {
+        size_t cap;
+        size_t len;
+        struct field **index;
+    } fields;
+};
+
+int psafe3_open(struct psafe3 *safe, long secmem_pool_size);
+int psafe3_close(struct psafe3 *safe);
+int psafe3_load(struct psafe3 *safe, const char *path);
+int psafe3_store(struct psafe3 *safe, const char *path);
+
+gcry_error_t stretch_and_check_pass(const char *pass, size_t passlen,
+                                    struct pws3_header *pro,
+                                    struct safe_sec *sec);
 int init_decrypt_ctx(struct crypto_ctx *ctx, struct pws3_header *pro,
                      struct safe_sec *sec);
 void term_decrypt_ctx(struct crypto_ctx *ctx);

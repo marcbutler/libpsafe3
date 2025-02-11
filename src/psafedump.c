@@ -5,13 +5,21 @@
 
 #include "util/util.h"
 
-#include "psafe/crypto.h"
 #include "psafe/psafe.h"
 #include "psafe/pws3.h"
 
+#include "libpsafe3/libpsafe3.h"
+
+static void gcrypt_fatal(gcry_error_t err)
+{
+    fwprintf(stderr, L"gcrypt error %s/%s\n", gcry_strsource(err),
+             gcry_strerror(err));
+    exit(EXIT_FAILURE);
+}
+
 int main(int argc, char **argv)
 {
-    int  ret;
+    int ret;
     char pass[100];
     setlocale(LC_ALL, "");
 
@@ -30,19 +38,22 @@ int main(int argc, char **argv)
         }
     }
 
-    crypto_init(64 * 1024);
+    if (libpsafe3_init() != 0) {
+        wprintf(L"Failed to initialize psafe3 library.");
+        exit(EXIT_FAILURE);
+    }
+    //crypto_init(64 * 1024);
 
     struct ioport *safe_io = NULL;
     if (ioport_mmap_open(argv[1], &safe_io) != 0) {
-        wprintf(L"Error opening file: %s", strerror(
-            errno));
+        wprintf(L"Error opening file: %s", strerror(errno));
         exit(EXIT_FAILURE);
     }
 
     struct ioport_mmap *mmio = (void *)safe_io;
-    uint8_t            *ptr = mmio->mem;
-    size_t              sz = mmio->mem_size;
-    struct pws3_header  hdr;
+    uint8_t *ptr = mmio->mem;
+    size_t sz = mmio->mem_size;
+    struct pws3_header hdr;
     if (pws3_read_header(safe_io, &hdr) != 0) {
         fwprintf(stderr, L"Error reading header.");
         exit(EXIT_FAILURE);
@@ -50,6 +61,11 @@ int main(int argc, char **argv)
 
     struct safe_sec *sec;
     sec = gcry_malloc_secure(sizeof(*sec));
+    if (sec == NULL) {
+        wprintf(L"Failed to allocate secure memory.\n");
+        exit(EXIT_FAILURE);
+    }
+
     ret = stretch_and_check_pass(pass, strlen(pass), &hdr, sec);
     if (ret != 0) {
         gcry_free(sec);
@@ -58,14 +74,17 @@ int main(int argc, char **argv)
     }
 
     uint8_t *safe;
-    size_t   safe_size;
+    size_t safe_size;
     safe_size = sz - (4 + sizeof(hdr) + 48);
     assert(safe_size > 0);
     assert(safe_size % TWOFISH_BLOCK_SIZE == 0);
     safe = gcry_malloc_secure(safe_size);
-    assert(safe != NULL);
+    if (safe == NULL) {
+        wprintf(L"Failed to allocate secure memory.\n");
+        exit(EXIT_FAILURE);
+    }
 
-    gcry_error_t      gerr;
+    gcry_error_t gerr;
     struct crypto_ctx ctx;
     if (init_decrypt_ctx(&ctx, &hdr, sec) < 0) {
         gcrypt_fatal(ctx.gerr);
@@ -142,6 +161,11 @@ int main(int argc, char **argv)
     safe_io->close(safe_io);
     term_decrypt_ctx(&ctx);
 
-    crypto_term();
+    //crypto_term();
+    if (libpsafe3_term() != 0) {
+        wprintf(L"Error terminating psafe3 library.");
+        exit(EXIT_FAILURE);
+    }
+
     exit(0);
 }

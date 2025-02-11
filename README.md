@@ -10,7 +10,7 @@ Building
 
 Requires:
 
-* Compiler that supports C11.
+* Compiler with C11 support.
 * [CMake][cmake]
 * [GCrypt Library][libgcrypt]
 

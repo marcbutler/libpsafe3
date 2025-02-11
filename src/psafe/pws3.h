@@ -15,4 +15,4 @@ typedef struct pws3_header {
     uint8_t  iv[16];
 } pws3_header;
 
-int pws3_read_header(IOPort *port, pws3_header *hdr);
+int pws3_read_header(struct ioport *port, pws3_header *hdr);

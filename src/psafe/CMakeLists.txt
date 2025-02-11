@@ -4,10 +4,9 @@ find_path(LIBGCRYPT_INCLUDE_DIR NAMES "gcrypt.h")
 find_library(LIBGCRYPT_LIBRARY NAMES "gcrypt" "libgcrypt")
 
 # Build library objects only once.
-add_library(psafe_objlib OBJECT crypto.c psafe.c pws3.c)
+add_library(psafe_objlib OBJECT psafe.c pws3.c)
 set_property(TARGET psafe_objlib PROPERTY POSITION_INDEPENDENT_CODE ON)
 target_include_directories(psafe_objlib PUBLIC ${LIBGCRYPT_INCLUDE_DIR})
-
 
 add_library(psafe_shared SHARED $<TARGET_OBJECTS:psafe_objlib>)
 set_target_properties(psafe_shared PROPERTIES OUTPUT_NAME psafe)

@@ -2,15 +2,15 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "util/util.h"
 #include "pws3.h"
+#include "util/util.h"
 
-int pws3_read_header(IOPort *port, pws3_header *hdr)
+int pws3_read_header(struct ioport *port, pws3_header *hdr)
 {
     static const char MAGIC[] = {'P', 'W', 'S', '3'};
 
     char magic[4];
-    if (ioport_read_exactly(port, magic, sizeof(magic)) != 0) {
+    if (ioport_readn(port, magic, sizeof(magic)) != 0) {
         goto exit_err;
     }
     if (memcmp(magic, MAGIC, sizeof(magic)) != 0) {
@@ -18,12 +18,12 @@ int pws3_read_header(IOPort *port, pws3_header *hdr)
     }
 
 #define READ_FIELD(fld)                                                        \
-    if (ioport_read_exactly(port, &hdr->fld, sizeof(hdr->fld)) != 0)           \
+    if (ioport_readn(port, &hdr->fld, sizeof(hdr->fld)) != 0)                  \
     goto exit_err
 
     READ_FIELD(salt);
 
-    if (ioport_read_le32(port, &hdr->iter) != 0) {
+    if (ioport_readle32(port, &hdr->iter) != 0) {
         goto exit_err;
     }
 

@@ -1,5 +1,5 @@
 #include <assert.h>
-#include <err.h>
+#include <errno.h>
 #include <gcrypt.h>
 #include <getopt.h>
 #include <inttypes.h>
@@ -13,9 +13,15 @@
 
 #include "util/util.h"
 
-#include "crypto.h"
 #include "psafe.h"
 #include "pws3.h"
+
+static void gcrypt_fatal(gcry_error_t err)
+{
+    fwprintf(stderr, L"gcrypt error %s/%s\n", gcry_strsource(err),
+             gcry_strerror(err));
+    exit(EXIT_FAILURE);
+}
 
 void stretch_key(const char *pass, size_t passlen,
                  const struct pws3_header *pro, uint8_t *skey)
@@ -236,20 +242,38 @@ void print_prologue(FILE *f, struct pws3_header *pro)
 #undef EOL
 }
 
-int stretch_and_check_pass(const char *pass, size_t passlen,
-                           struct pws3_header *pro, struct safe_sec *sec)
+gcry_error_t stretch_and_check_pass(const char *pass, size_t passlen,
+                                    struct pws3_header *pro,
+                                    struct safe_sec    *sec)
 {
+    gcry_error_t err;
     stretch_key(pass, passlen, pro, sec->pprime);
     uint8_t hkey[32];
     sha256_block32(sec->pprime, hkey);
     if (memcmp(pro->h_pprime, hkey, 32) != 0) {
-        return -1;
+        err = gcry_err_code_from_errno(EINVAL);
+        goto exitfn;
     }
-    gcry_error_t gerr;
-    gerr = extract_random_key(sec->pprime, pro->b[0], pro->b[1], sec->rand_k);
-    if (gerr != GPG_ERR_NO_ERROR) {
-        return gerr;
+    err = extract_random_key(sec->pprime, pro->b[0], pro->b[1], sec->rand_k);
+    if (err != GPG_ERR_NO_ERROR) {
+        goto exitfn;
     }
-    gerr = extract_random_key(sec->pprime, pro->b[2], pro->b[3], sec->rand_l);
-    return gerr;
+    err = extract_random_key(sec->pprime, pro->b[2], pro->b[3], sec->rand_l);
+exitfn:
+    return err;
+}
+
+int psafe3_load(struct psafe3 *safe, const char *path)
+{
+    assert(safe != NULL);
+    assert(path != NULL);
+    
+    return -ENOSYS;
+}
+
+int psafe3_store(struct psafe3 *safe, const char *path)
+{
+    assert(safe != NULL);
+    assert(path != NULL);
+    return -ENOSYS;
 }
