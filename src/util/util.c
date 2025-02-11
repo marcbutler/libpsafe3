@@ -10,15 +10,24 @@
 
 #include "util.h"
 
-void CrashActual(const char *path, const char *func)
+void crash_actual(const char *path, const char *func)
 {
-    /* FIXME See if arguments should be wide char. */
+    // FIXME See if arguments should be wide char.
     fwprintf(stderr, L"CRASH %s:%s\n", path, func);
 #ifdef NDEBUG
     abort();
 #else
+
+#if __clang__
+    // Prefer clang.
     __builtin_debugtrap();
+#elif __GNUC__
+    __builtin_trap();
+#else
+    abort();
 #endif
+#endif
+
 }
 
 void util_close_fd(int fd)
