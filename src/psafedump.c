@@ -42,7 +42,6 @@ int main(int argc, char **argv)
         wprintf(L"Failed to initialize psafe3 library.");
         exit(EXIT_FAILURE);
     }
-    //crypto_init(64 * 1024);
 
     struct ioport *safe_io = NULL;
     if (ioport_mmap_open(argv[1], &safe_io) != 0) {
@@ -161,7 +160,6 @@ int main(int argc, char **argv)
     safe_io->close(safe_io);
     term_decrypt_ctx(&ctx);
 
-    //crypto_term();
     if (libpsafe3_term() != 0) {
         wprintf(L"Error terminating psafe3 library.");
         exit(EXIT_FAILURE);

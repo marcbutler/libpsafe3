@@ -5,6 +5,8 @@ Command line utility for dumping the contents of [Password Safe][pwsafe] databas
 
 [![Build Status](https://github.com/marcbutler/psafe/actions/workflows/cmake-test.yml/badge.svg)](https://github.com/marcbutler/psafe/actions/workflows/cmake-test.yml)
 
+See [LICENSE](./LICENSE) file for licensing details.
+
 Building
 --------
 
