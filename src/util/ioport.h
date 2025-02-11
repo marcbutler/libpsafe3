@@ -34,6 +34,6 @@ struct ioport_mmap {
     void *mem;
     size_t mem_size;
     size_t pos;
-} ioport_mmap;
+};
 
 int ioport_mmap_open(const char *path, struct ioport **port);
