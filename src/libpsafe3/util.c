@@ -17,17 +17,15 @@ void crash_actual(const char *path, const char *func)
 #ifdef NDEBUG
     abort();
 #else
-
-#if __clang__
+#    if __clang__
     // Prefer clang.
     __builtin_debugtrap();
-#elif __GNUC__
+#    elif __GNUC__
     __builtin_trap();
-#else
+#    else
     abort();
+#    endif
 #endif
-#endif
-
 }
 
 void util_close_fd(int fd)

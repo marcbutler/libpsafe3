@@ -1,8 +1,15 @@
 #pragma once
+// https://github.com/marcbutler/psafe/LICENSE
+
+// Unified interface for performing IO to both files and memory.
+// Idea inspired by Scheme/Racket https://racket-lang.org/. See also SDL
+// https://www.libsdl.org/ SDL_IOStreamInterface.
 
 #include <stdint.h>
 #include <stdlib.h>
 #include <sys/types.h>
+
+#define BYTE uint8_t
 
 #define IOPORT_READABLE UINTMAX_C(0x1)
 #define IOPORT_WRITABLE UINTMAX_C(0x2)
@@ -10,7 +17,7 @@
 #define IOPORT_SEEKABLE UINTMAX_C(0x20)
 
 struct ioport {
-    uintmax_t attr;
+    uintmax_t attr; // TODO Unimplemented
     int (*read)(struct ioport *port, void *buf, const size_t max,
                 size_t *actual);
     int (*close)(struct ioport *port);

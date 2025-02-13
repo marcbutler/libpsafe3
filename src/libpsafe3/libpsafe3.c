@@ -1,8 +1,9 @@
-// https://github.com/marcbutler/psafe
+// https://github.com/marcbutler/psafe/LICENSE
 
-#include <assert.h>
 #include <errno.h>
 #include <stdlib.h>
+
+#include "lib.internal.h"
 
 #include "crypto_gcrypt.h"
 

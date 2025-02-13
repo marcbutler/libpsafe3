@@ -3,7 +3,7 @@
 #include <unistd.h>
 
 #include "pws3.h"
-#include "util/util.h"
+#include "libpsafe3/util.h"
 
 int pws3_read_header(struct ioport *port, pws3_header *hdr)
 {

@@ -1,7 +1,9 @@
-BasedOnStyle: LLVM
 AlignConsecutiveDeclarations: false
+BasedOnStyle: LLVM
 BreakBeforeBraces: Linux
 IndentCaseLabels: false
+IndentPPDirectives: AfterHash
 IndentWidth: 4
+InsertBraces: true
 PointerAlignment: Right
 SortIncludes: true

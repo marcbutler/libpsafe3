@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#include "util/util.h"
+#include "libpsafe3/util.h"
 
 int main(int argc, char **argv)
 {

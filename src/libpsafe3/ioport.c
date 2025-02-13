@@ -97,9 +97,6 @@ close_on_err:
     return -1;
 }
 
-/*
- * Read exact number of bytes from the port.
- */
 int ioport_readn(struct ioport *port, void *buf, const size_t len)
 {
     int ret;

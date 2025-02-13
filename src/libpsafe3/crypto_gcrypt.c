@@ -1,4 +1,6 @@
-// https://github.com/marcbutler/psafe
+// https://github.com/marcbutler/psafe/LICENSE
+
+#include "lib.internal.h"
 
 #include "crypto_gcrypt.h"
 
@@ -16,9 +18,6 @@ gcry_error_t crypto_init()
     if (err != GPG_ERR_NO_ERROR) {
         return err;
     }
-
-    // Given the safe password is passed in via insecure memory. It is unclear
-    // use of secure memory is warranted.
 
     // Initialize secure memory pool to default size; currently 16KiB.
     err = gcry_control(GCRYCTL_INIT_SECMEM, 1);

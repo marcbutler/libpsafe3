@@ -1,4 +1,4 @@
-name: Test
+name: Main Build and Test
 
 on:
   push:
@@ -18,5 +18,5 @@ jobs:
       - name: Test
         uses: threeal/ctest-action@v1.1.0
         with:
-          test-dir: build/src
+          test-dir: build
           build-config: Debug

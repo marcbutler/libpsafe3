@@ -1,5 +1,5 @@
 #pragma once
-// https://github.com/marcbutler/psafe
+// https://github.com/marcbutler/psafe/LICENSE
 
 #include <gcrypt.h>
 

@@ -36,11 +36,6 @@ struct psafe3 {
     } fields;
 };
 
-int psafe3_open(struct psafe3 *safe, long secmem_pool_size);
-int psafe3_close(struct psafe3 *safe);
-int psafe3_load(struct psafe3 *safe, const char *path);
-int psafe3_store(struct psafe3 *safe, const char *path);
-
 gcry_error_t stretch_and_check_pass(const char *pass, size_t passlen,
                                     struct pws3_header *pro,
                                     struct safe_sec *sec);

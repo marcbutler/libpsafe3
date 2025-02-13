@@ -3,12 +3,12 @@
 #include <locale.h>
 #include <wchar.h>
 
-#include "util/util.h"
-
 #include "psafe/psafe.h"
 #include "psafe/pws3.h"
 
+#include "libpsafe3/lib.internal.h" // TEMPORARY
 #include "libpsafe3/libpsafe3.h"
+#include "libpsafe3/util.h"
 
 static void gcrypt_fatal(gcry_error_t err)
 {
@@ -76,7 +76,7 @@ int main(int argc, char **argv)
     size_t safe_size;
     safe_size = sz - (4 + sizeof(hdr) + 48);
     assert(safe_size > 0);
-    assert(safe_size % TWOFISH_BLOCK_SIZE == 0);
+    assert(safe_size % TWOFISH_SIZE == 0);
     safe = gcry_malloc_secure(safe_size);
     if (safe == NULL) {
         wprintf(L"Failed to allocate secure memory.\n");
@@ -90,20 +90,20 @@ int main(int argc, char **argv)
     }
 
     size_t bcnt;
-    bcnt = safe_size / TWOFISH_BLOCK_SIZE;
+    bcnt = safe_size / TWOFISH_SIZE;
     assert(bcnt > 0);
     uint8_t *encp;
     uint8_t *safep;
     encp = ptr + 4 + sizeof(hdr);
     safep = safe;
     while (bcnt && IOPORT_CAN_READ(safe_io)) {
-        gerr = gcry_cipher_decrypt(ctx.cipher, safep, TWOFISH_BLOCK_SIZE, encp,
-                                   TWOFISH_BLOCK_SIZE);
+        gerr = gcry_cipher_decrypt(ctx.cipher, safep, TWOFISH_SIZE, encp,
+                                   TWOFISH_SIZE);
         if (gerr != GPG_ERR_NO_ERROR) {
             gcrypt_fatal(gerr);
         }
-        safep += TWOFISH_BLOCK_SIZE;
-        encp += TWOFISH_BLOCK_SIZE;
+        safep += TWOFISH_SIZE;
+        encp += TWOFISH_SIZE;
         bcnt--;
     }
     wprintf(L"bcnt==%lu\n", bcnt);
@@ -116,21 +116,22 @@ int main(int argc, char **argv)
         struct field *fld;
         fld = (struct field *)safep;
         wprintf(L"len=%-3u  type=%02x  ", fld->len, fld->type);
-        if (state == DB)
+        if (state == DB) {
             db_print(stdout, fld);
-        else
+        } else {
             hd_print(stdout, fld);
-        if (fld->type == 0xff)
+        }
+        if (fld->type == 0xff) {
             state = DB;
+        }
         putwc('\n', stdout);
-        if (fld->len)
+        if (fld->len) {
             gcry_md_write(ctx.hmac, safep + sizeof(*fld), fld->len);
-        safep +=
-            ((fld->len + 5 + 15) / TWOFISH_BLOCK_SIZE) * TWOFISH_BLOCK_SIZE;
+        }
+        safep += ((fld->len + 5 + 15) / TWOFISH_SIZE) * TWOFISH_SIZE;
     }
 
-    assert(memcmp(ptr + (sz - 48), "PWS3-EOFPWS3-EOF", TWOFISH_BLOCK_SIZE) ==
-           0);
+    assert(memcmp(ptr + (sz - 48), "PWS3-EOFPWS3-EOF", TWOFISH_SIZE) == 0);
 
 #define EOL() putwc('\n', stdout)
     EOL();
