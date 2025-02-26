@@ -7,6 +7,13 @@
 #define SHA256_SIZE 32  // Bytes
 
 // Denote for library internal use only.
-#define LIBONLY __attribute__((visibility("hidden")))
+#define INTERNAL __attribute__((visibility("hidden")))
 
 #define ASSERTPTR(ptr) assert((ptr) != NULL)
+
+#define KIB(n) ((n) * 1024)
+#define MIB(n) ((n) * 1048576)
+
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+#define MAX(a, b) (((a) > (b)) ? (a) : (b))
+

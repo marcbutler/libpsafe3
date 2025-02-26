@@ -1,6 +1,6 @@
 // https://github.com/marcbutler/psafe/LICENSE
 
-#include "lib.internal.h"
+#include "internal.h"
 
 #include "crypto_gcrypt.h"
 

@@ -6,7 +6,7 @@
 #include "psafe/psafe.h"
 #include "psafe/pws3.h"
 
-#include "libpsafe3/lib.internal.h" // TEMPORARY
+#include "libpsafe3/internal.h" // TEMPORARY
 #include "libpsafe3/libpsafe3.h"
 #include "libpsafe3/util.h"
 

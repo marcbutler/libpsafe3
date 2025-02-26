@@ -11,7 +11,7 @@
 #include <unistd.h>
 #include <wchar.h>
 
-#include "libpsafe3/lib.internal.h"
+#include "libpsafe3/internal.h"
 #include "libpsafe3/util.h"
 
 #include "psafe.h"
@@ -24,7 +24,7 @@ static void gcrypt_fatal(gcry_error_t err)
     exit(EXIT_FAILURE);
 }
 
-LIBONLY void stretch_key(const char *pass, size_t passlen,
+INTERNAL void stretch_key(const char *pass, size_t passlen,
                          const struct pws3_header *pro, uint8_t *skey)
 {
     gcry_error_t gerr;

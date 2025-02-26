@@ -3,7 +3,7 @@
 #include <errno.h>
 #include <stdlib.h>
 
-#include "lib.internal.h"
+#include "internal.h"
 
 #include "crypto_gcrypt.h"
 

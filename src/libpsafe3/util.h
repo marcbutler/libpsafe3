@@ -4,9 +4,6 @@
 
 #include <stdint.h>
 
-#define KIB(n) ((n) * 1024)
-#define MIB(n) ((n) * 1048576)
-
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 
