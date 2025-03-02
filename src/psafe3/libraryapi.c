@@ -1,27 +1,26 @@
-// https://github.com/marcbutler/psafe/LICENSE
+/* https://github.com/marcbutler/libpsafe3/LICENSE */
 
 #include <errno.h>
-#include <stdlib.h>
 
-#include "internal.h"
+#include "util.h"
 
 #include "crypto_gcrypt.h"
 
-int libpsafe3_init()
+int psafe3_setup()
 {
     gcry_error_t err;
     err = crypto_init();
-    if (!CRYPTO_OK(err)) {
+    if (CRYPTO_FAIL(err)) {
         return -1;
     }
     return 0;
 }
 
-int libpsafe3_term()
+int psafe3_teardown()
 {
     gcry_error_t err;
     err = crypto_term();
-    if (!CRYPTO_OK(err)) {
+    if (CRYPTO_FAIL(err)) {
         return -1;
     }
     return 0;

@@ -1,0 +1,26 @@
+0x01,UUID,UUID                        
+0x02,Text,Group                       
+0x03,Text,Title                       
+0x04,Text,Username                    
+0x05,Text,Notes                       
+0x06,Text,Password                    
+0x07,time_t,Creation Time               
+0x08,time_t,Password Modification Time  
+0x09,time_t,Last Access Time            
+0x0a,time_t,Password Expiry Time        
+0x0b,4 bytes,Reserved                  
+0x0c,time_t,Last Modification Time      
+0x0d,Text,URL                         
+0x0e,Text,Autotype                    
+0x0f,Text,Password History            
+0x10,Text,Password Policy             
+0x11,2 bytes,Password Expiry Interval    
+0x12,Text,Run Command                 
+0x13,2 bytes,Double-Click Action         
+0x14,Text,EMail address               
+0x15,1 byte,Protected Entry             
+0x16,Text,Own symbols for password    
+0x17,2 bytes,Shift Double-Click Action   
+0x18,Text,Password Policy Name        
+0x19,4 bytes,Entry keyboard shortcut     
+0xff,[empty],End of Entry

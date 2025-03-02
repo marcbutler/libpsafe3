@@ -1,0 +1,20 @@
+0x00,2 bytes,Version                     
+0x01,UUID,UUID                        
+0x02,Text,Non-default preferences     
+0x03,Text,Tree Display Status         
+0x04,time_t,Timestamp of last save      
+0x05,Text,Who performed last save     
+0x06,Text,What performed last save    
+0x07,Text,Last saved by user          
+0x08,Text,Last saved on host          
+0x09,Text,Database Name               
+0x0a,Text,Database Description        
+0x0b,Text,Database Filters            
+0x0c,-,Reserved                    
+0x0d,-,Reserved                    
+0x0e,-,Reserved                    
+0x0f,Text,Recently Used Entries       
+0x10,Text,Named Password Policies     
+0x11,Text,Empty Groups                
+0x12,Text,Reserved                    
+0xff,[empty],End of Entry                

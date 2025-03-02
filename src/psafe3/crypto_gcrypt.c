@@ -1,8 +1,7 @@
-// https://github.com/marcbutler/psafe/LICENSE
-
-#include "internal.h"
+/* https://github.com/marcbutler/libpsafe3/LICENSE */
 
 #include "crypto_gcrypt.h"
+#include "util.h"
 
 #define GCRY_FAILED(err) ((err) != GPG_ERR_NO_ERROR)
 

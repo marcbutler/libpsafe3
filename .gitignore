@@ -2,5 +2,6 @@
 .cache/
 **/.DS_Store
 *~
+*.bak
 build/
 venv/

@@ -1,8 +1,7 @@
-#include <assert.h>
+/* https://github.com/marcbutler/libpsafe3/LICENSE */
+
 #include <errno.h>
-#include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <termios.h>
 #include <unistd.h>
@@ -17,8 +16,8 @@ void crash_actual(const char *path, const char *func)
 #ifdef NDEBUG
     abort();
 #else
+/* Prefer clang. */
 #    if __clang__
-    // Prefer clang.
     __builtin_debugtrap();
 #    elif __GNUC__
     __builtin_trap();
@@ -28,19 +27,34 @@ void crash_actual(const char *path, const char *func)
 #endif
 }
 
-void util_close_fd(int fd)
+/*
+ * Wide character version of perror().
+ */
+void wperror(wchar_t *msg)
+{
+    if (msg == NULL || *msg == 0) {
+        fwprintf(stderr, L"%s", strerror(errno));
+    } else {
+        fwprintf(stderr, L"%s: %s", msg, strerror(errno));
+    }
+}
+
+/*
+ * Close file descriptor. On error output message to stderr.
+ */
+void checked_close(int fd)
 {
     int ret;
 
-call_again:
+    assert_fd(fd);
     ret = close(fd);
     if (ret != 0) {
-        switch (errno) {
-        case EINTR:
-            goto call_again;
-        default:
-            crash();
-        }
+        /*
+         * Though POSIX allows the descriptor to still be valid for some errors,
+         * do not attempt to call close() again even for EINTR.
+         * See the Linux close(2) man page as to why.
+         */
+        wperror(L"close()");
     }
 }
 

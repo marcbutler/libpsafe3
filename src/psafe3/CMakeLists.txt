@@ -1,10 +1,17 @@
 find_package(PkgConfig QUIET)
+
 pkg_check_modules(LIBGCRYPT libgcrypt REQUIRED)
 find_path(LIBGCRYPT_INCLUDE_DIR NAMES "gcrypt.h")
 find_library(LIBGCRYPT_LIBRARY NAMES "gcrypt" "libgcrypt")
 
+pkg_check_modules(UUID uuid REQUIRED)
+find_path(LIBGCRYPT_INCLUDE_DIR NAMES "uuid.h")
+find_library(LIBGCRYPT_LIBRARY NAMES "uuid")
+
+set(SRC crypto_gcrypt.c psafe.c pws3.c libraryapi.c safeio.c util.c)
+
 # Build library objects for both static and shared libraries only once.
-add_library(psafe3_objlib OBJECT libpsafe3.c crypto_gcrypt.c ioport.c util.c)
+add_library(psafe3_objlib OBJECT ${SRC})
 set_property(TARGET psafe3_objlib PROPERTY POSITION_INDEPENDENT_CODE ON)
 target_include_directories(psafe3_objlib PUBLIC ${LIBGCRYPT_INCLUDE_DIR})
 
