@@ -3,8 +3,8 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "util.h"
 #include "pws3.h"
+#include "util.h"
 
 int psafe3_parse_header(void *ptr, size_t size, struct pws3_header *hdr)
 {
@@ -24,8 +24,8 @@ int psafe3_parse_header(void *ptr, size_t size, struct pws3_header *hdr)
         if ((bytep + fldsz) > endp) {                                          \
             goto exit_err;                                                     \
         }                                                                      \
-        memcpy(&hdr->fld, bytep, fldsz);                                         \
-        bytep += fldsz;                                                          \
+        memcpy(&hdr->fld, bytep, fldsz);                                       \
+        bytep += fldsz;                                                        \
     } while (0)
 
     READ_FIELD(salt);
@@ -48,4 +48,3 @@ int psafe3_parse_header(void *ptr, size_t size, struct pws3_header *hdr)
 exit_err:
     return -1;
 }
-

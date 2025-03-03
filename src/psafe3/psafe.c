@@ -11,9 +11,9 @@
 #include <unistd.h>
 #include <wchar.h>
 
-#include "util.h"
 #include "psafe.h"
 #include "pws3.h"
+#include "util.h"
 
 static void gcrypt_fatal(gcry_error_t err)
 {
@@ -45,31 +45,30 @@ INTERNAL void stretch_key(const char *pass, size_t passlen,
     gcry_md_close(sha256);
 }
 
-/**
- * @brief Run SHA-256 on a 256 bit (32 byte) block.
- *
- * Used for password stretching.
- *
- * @param in Input block.
- * @param out Output block.
- *
- * @todo Add return value.
- */
-INTERNAL void sha256_block32(const uint8_t *in, uint8_t *out)
+INTERNAL gcry_error_t sha256_md(const uint8_t *in, uint8_t *out, size_t len)
 {
     gcry_md_hd_t hd;
     gcry_error_t err;
+    
     err = gcry_md_open(&hd, GCRY_MD_SHA256, GCRY_MD_FLAG_SECURE);
     if (err != GPG_ERR_NO_ERROR) {
-        gcrypt_fatal(err);
+        goto exit_with_error;
     }
-    gcry_md_write(hd, in, SHA256_SIZE);
+    gcry_md_write(hd, in, len);
     err = gcry_md_final(hd);
     if (err != GPG_ERR_NO_ERROR) {
-        gcrypt_fatal(err);
+        goto exit_with_error;
     }
-    memmove(out, gcry_md_read(hd, 0), SHA256_SIZE);
+
+    const uint8_t *hash = gcry_md_read(hd, 0);
+    if (hash == NULL) {
+        goto exit_with_error;
+    }
+    memmove(out, hash, SHA256_SIZE);
     gcry_md_close(hd);
+
+exit_with_error:
+    return err;
 }
 
 /**
@@ -259,16 +258,6 @@ void dump_prologue(FILE *f, struct pws3_header *pro)
 #undef EOL
 }
 
-/**
- * @brief Stretch password and check against hash in header.
- *
- * @param pass Must not be null.
- * @param passlen Password length in bytes. Behavior is undefined if the length
- * is zero.
- * @param pro File header block.
- * @param sec Security context.
- * @return gcry_error_t -EINVAL Invalid password.
- */
 gcry_error_t stretch_and_check_pass(const char *pass, size_t passlen,
                                     struct pws3_header *pro,
                                     struct safe_sec    *sec)
@@ -278,7 +267,10 @@ gcry_error_t stretch_and_check_pass(const char *pass, size_t passlen,
     stretch_key(pass, passlen, pro, sec->pprime);
 
     uint8_t hkey[SHA256_SIZE];
-    sha256_block32(sec->pprime, hkey);
+    err = sha256_md(sec->pprime, hkey, SHA256_SIZE);
+    if (err != GPG_ERR_NO_ERROR) {
+        goto exitfn;
+    }
     if (memcmp(pro->h_pprime, hkey, SHA256_SIZE) != 0) {
         err = gcry_err_code_from_errno(EINVAL);
         goto exitfn;

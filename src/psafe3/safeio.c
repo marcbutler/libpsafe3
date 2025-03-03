@@ -6,7 +6,5 @@
 
 static const char MAGIC[] = {'P', 'W', 'S', '3'};
 
-static const BYTE DBEND[] = {'P', 'W', 'S', '3', '-', 'E', 'O', 'F',
+static const BYTE DBEOF[] = {'P', 'W', 'S', '3', '-', 'E', 'O', 'F',
                              'P', 'W', 'S', '3', '-', 'E', 'O', 'F'};
-
-                      

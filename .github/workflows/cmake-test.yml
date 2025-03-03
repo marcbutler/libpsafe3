@@ -11,6 +11,8 @@ jobs:
     steps:
       - name: Install libgcrypt
         run: sudo apt install -y libgcrypt-dev
+      - name: Install uuid-dev
+        run: sudo apt install -y uuid-dev
       - name: Checkout
         uses: actions/checkout@v4.2.2
       - name: Build
