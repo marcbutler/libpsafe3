@@ -131,7 +131,6 @@ int main(int argc, char **argv)
         encp += TWOFISH_SIZE;
         bcnt--;
     }
-    wprintf(L"bcnt==%lu\n", bcnt);
     assert(bcnt == 0);
 
     enum { HDR, DB };
@@ -140,7 +139,7 @@ int main(int argc, char **argv)
     while (safep < safe + safe_size) {
         struct field *fld;
         fld = (struct field *)safep;
-        wprintf(L"len=%-3u  type=%02x  ", fld->len, fld->type);
+        wprintf(L"type=%02x  len=%-3u  ", fld->type, fld->len);
         if (state == DB) {
             dump_db_field(stdout, fld);
         } else {
@@ -162,21 +161,21 @@ int main(int argc, char **argv)
     EOL();
     dump_prologue(stdout, &hdr);
     wprintf(L"KEY    ");
-    dump_bytes(stdout, sec->pprime, 32);
+    dump_bytes(stdout, sec->pprime, SHA256_SIZE);
     EOL();
     wprintf(L"H(KEY) ");
-    dump_bytes(stdout, hdr.h_pprime, 32);
+    dump_bytes(stdout, hdr.h_pprime, SHA256_SIZE);
     EOL();
 
     gcry_md_final(ctx.hmac);
     wprintf(L"HMAC'  ");
     uint8_t hmac[32];
-    memmove(hmac, gcry_md_read(ctx.hmac, GCRY_MD_SHA256), 32);
-    dump_bytes(stdout, hmac, 32);
+    memmove(hmac, gcry_md_read(ctx.hmac, GCRY_MD_SHA256), SHA256_SIZE);
+    dump_bytes(stdout, hmac, SHA256_SIZE);
     EOL();
 
     wprintf(L"HMAC   ");
-    dump_bytes(stdout, ptr + (sz - 32), 32);
+    dump_bytes(stdout, ptr + (sz - SHA256_SIZE), SHA256_SIZE);
     EOL();
 #undef EOL
 

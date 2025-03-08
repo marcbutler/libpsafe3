@@ -22,34 +22,48 @@ static void gcrypt_fatal(gcry_error_t err)
     exit(EXIT_FAILURE);
 }
 
-INTERNAL void stretch_key(const char *pass, size_t passlen,
-                          const struct pws3_header *pro, uint8_t *skey)
+/*
+ * Perform hash based stretching on the provided password.
+ *
+ * http://www.schneier.com/paper-low-entropy.pdf
+ */
+INTERNAL gcry_error_t stretch_key(const char *pass, size_t passlen,
+                                  const struct pws3_header *pro, uint8_t *skey)
 {
-    gcry_error_t gerr;
-    gcry_md_hd_t sha256;
-    gerr = gcry_md_open(&sha256, GCRY_MD_SHA256, GCRY_MD_FLAG_SECURE);
-    if (gerr != GPG_ERR_NO_ERROR) {
-        gcrypt_fatal(gerr);
+    gcry_error_t  err;
+    gcry_md_hd_t  sha256;
+    unsigned char tmp[SHA256_SIZE];
+
+    err = gcry_md_open(&sha256, GCRY_MD_SHA256, GCRY_MD_FLAG_SECURE);
+    if (err != GPG_ERR_NO_ERROR) {
+        return err;
     }
 
     gcry_md_write(sha256, pass, passlen);
     gcry_md_write(sha256, pro->salt, SHA256_SIZE);
-    memmove(skey, gcry_md_read(sha256, 0), SHA256_SIZE);
+    memmove(tmp, gcry_md_read(sha256, 0), SHA256_SIZE);
 
     uint32_t iter = pro->iter;
+    assert(iter > 0);
     while (iter-- > 0) {
         gcry_md_reset(sha256);
-        gcry_md_write(sha256, skey, SHA256_SIZE);
-        memmove(skey, gcry_md_read(sha256, 0), SHA256_SIZE);
+        gcry_md_write(sha256, tmp, SHA256_SIZE);
+        memmove(tmp, gcry_md_read(sha256, 0), SHA256_SIZE);
     }
+
+    memmove(skey, gcry_md_read(sha256, 0), SHA256_SIZE);
     gcry_md_close(sha256);
+    return GPG_ERR_NO_ERROR;
 }
 
+/*
+ * Compute the SHA256 message digest of the input buffer.
+ */
 INTERNAL gcry_error_t sha256_md(const uint8_t *in, uint8_t *out, size_t len)
 {
     gcry_md_hd_t hd;
     gcry_error_t err;
-    
+
     err = gcry_md_open(&hd, GCRY_MD_SHA256, GCRY_MD_FLAG_SECURE);
     if (err != GPG_ERR_NO_ERROR) {
         goto exit_with_error;
@@ -71,29 +85,24 @@ exit_with_error:
     return err;
 }
 
-/**
- * @brief Extract the random key from the header.
- *
- * @param stretchkey Verified stretched key.
- * @param fst Block B1.
- * @param snd Block B2.
- * @param randkey Random key storage.
- * @return Error status.
+/*
+ * Decrypt the random key using the stretch key.
  */
 INTERNAL gcry_error_t extract_random_key(const uint8_t *stretchkey,
                                          const uint8_t *fst, const uint8_t *snd,
                                          uint8_t *randkey)
 {
-    gcry_error_t     gerr;
+    gcry_error_t     err;
     gcry_cipher_hd_t hd;
-    gerr = gcry_cipher_open(&hd, GCRY_CIPHER_TWOFISH, GCRY_CIPHER_MODE_ECB,
-                            GCRY_CIPHER_SECURE);
-    if (gerr != GPG_ERR_NO_ERROR) {
-        return gerr;
+
+    err = gcry_cipher_open(&hd, GCRY_CIPHER_TWOFISH, GCRY_CIPHER_MODE_ECB,
+                           GCRY_CIPHER_SECURE);
+    if (err != GPG_ERR_NO_ERROR) {
+        return err;
     }
-    gerr = gcry_cipher_setkey(hd, stretchkey, SHA256_SIZE);
-    if (gerr != GPG_ERR_NO_ERROR) {
-        return gerr;
+    err = gcry_cipher_setkey(hd, stretchkey, SHA256_SIZE);
+    if (err != GPG_ERR_NO_ERROR) {
+        return err;
     }
     gcry_cipher_decrypt(hd, randkey, TWOFISH_SIZE, fst, TWOFISH_SIZE);
     gcry_cipher_reset(hd);
@@ -264,9 +273,13 @@ gcry_error_t stretch_and_check_pass(const char *pass, size_t passlen,
 {
     gcry_error_t err;
 
-    stretch_key(pass, passlen, pro, sec->pprime);
+    err = stretch_key(pass, passlen, pro, sec->pprime);
+    if (err != GPG_ERR_NO_ERROR) {
+        goto exitfn;
+    }
 
     uint8_t hkey[SHA256_SIZE];
+
     err = sha256_md(sec->pprime, hkey, SHA256_SIZE);
     if (err != GPG_ERR_NO_ERROR) {
         goto exitfn;

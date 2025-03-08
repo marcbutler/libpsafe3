@@ -11,4 +11,7 @@ add_executable(psafe3dump psafe3dump.c)
 target_link_libraries(psafe3dump PRIVATE psafe3_static)
 target_include_directories(psafe3dump PUBLIC ${LIBGCRYPT_INCLUDE_DIR})
 
+add_executable(psafe3chkpass psafe3chkpass.c)
+target_link_libraries(psafe3chkpass PRIVATE psafe3_static)
+
 add_subdirectory(test)

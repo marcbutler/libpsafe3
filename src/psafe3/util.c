@@ -11,7 +11,7 @@
 
 void crash_actual(const char *path, const char *func)
 {
-    // FIXME See if arguments should be wide char.
+    /* TODO See if arguments should be wide char. */
     fwprintf(stderr, L"CRASH %s:%s\n", path, func);
 #ifdef NDEBUG
     abort();
@@ -50,14 +50,17 @@ void checked_close(int fd)
     ret = close(fd);
     if (ret != 0) {
         /*
-         * Though POSIX allows the descriptor to still be valid for some errors,
-         * do not attempt to call close() again even for EINTR.
-         * See the Linux close(2) man page as to why.
+         * Though POSIX allows the descriptor to still be valid for errors other
+         * than EINVAL, do not attempt to call close() again even for EINTR. See
+         * the Linux close(2) man page as to why.
          */
         wperror(L"close()");
     }
 }
 
+/*
+ * Read a line from the terminal. The newline character is removed.
+ */
 int read_from_terminal(const char *prompt, char *buf, size_t *bufsize)
 {
     assert(prompt && buf && bufsize);
