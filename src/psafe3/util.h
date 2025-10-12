@@ -40,7 +40,7 @@
 
 static inline uint32_t le32_deserialize(void *p)
 {
-    unsigned char *up = p;
+    unsigned char *up = (unsigned char *)p;
     return up[0] + (up[1] << 8) + (up[2] << 16) + (up[3] << 24);
 }
 
@@ -55,4 +55,4 @@ static inline void assert_ptr_diff(void *p1, void *p2, ptrdiff_t offset)
 void crash_actual(const char *path, const char *func);
 void checked_close(int fd);
 int  read_from_terminal(const char *prompt, char *buf, size_t *bufsize);
-void wperror(wchar_t *msg);
+void wperror(const wchar_t *msg);

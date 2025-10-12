@@ -30,7 +30,7 @@ void crash_actual(const char *path, const char *func)
 /*
  * Wide character version of perror().
  */
-void wperror(wchar_t *msg)
+void wperror(const wchar_t *msg)
 {
     if (msg == NULL || *msg == 0) {
         fwprintf(stderr, L"%s", strerror(errno));

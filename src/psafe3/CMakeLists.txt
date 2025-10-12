@@ -12,7 +12,7 @@ pkg_check_modules(UUID uuid REQUIRED)
 find_path(LIBGCRYPT_INCLUDE_DIR NAMES "uuid.h")
 find_library(LIBGCRYPT_LIBRARY NAMES "uuid")
 
-set(SRC crypto_gcrypt.c psafe.c pws3.c psafe3api.c safe.c util.c)
+set(SRC crypto_gcrypt.cpp psafe.cpp pws3.cpp psafe3api.cpp safe.cpp util.cpp)
 
 # Build library objects for both static and shared libraries only once.
 add_library(psafe3_objlib OBJECT ${SRC})

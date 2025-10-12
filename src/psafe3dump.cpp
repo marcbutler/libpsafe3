@@ -64,7 +64,7 @@ int main(int argc, char **argv)
     sz = file_info.st_size;
 
     unsigned char *ptr;
-    ptr = mmap(NULL, sz, PROT_READ, MAP_PRIVATE, fd, 0);
+    ptr = static_cast<unsigned char *>(mmap(NULL, sz, PROT_READ, MAP_PRIVATE, fd, 0));
     if (ptr == MAP_FAILED) {
         wperror(L"mmap()");
         exit(EXIT_FAILURE);
@@ -83,7 +83,7 @@ int main(int argc, char **argv)
      */
 
     struct safe_sec *sec;
-    sec = gcry_malloc_secure(sizeof(*sec));
+    sec = static_cast<struct safe_sec *>(gcry_malloc_secure(sizeof(*sec)));
     if (sec == NULL) {
         wprintf(L"Failed to allocate secure memory.\n");
         exit(EXIT_FAILURE);
@@ -101,7 +101,7 @@ int main(int argc, char **argv)
     safe_size = sz - (4 + sizeof(hdr) + 48);
     assert(safe_size > 0);
     assert(safe_size % TWOFISH_SIZE == 0);
-    safe = gcry_malloc_secure(safe_size);
+    safe = static_cast<uint8_t *>(gcry_malloc_secure(safe_size));
     if (safe == NULL) {
         wprintf(L"Failed to allocate secure memory.\n");
         exit(EXIT_FAILURE);

@@ -4,6 +4,10 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef unsigned int psafe3_err;
 
 #define PSAFE3_SUCCESS 0
@@ -24,3 +28,7 @@ psafe3_err  psafe3_verify_password(const char          *path,
                                    size_t               passlen);
 void        psafe3_free(struct psafe3 *psafe);
 const char *psafe3_strerror(psafe3_err err);
+
+#ifdef __cplusplus
+}
+#endif

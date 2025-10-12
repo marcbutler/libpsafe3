@@ -63,6 +63,7 @@ INTERNAL gcry_error_t sha256_md(const uint8_t *in, uint8_t *out, size_t len)
 {
     gcry_md_hd_t hd;
     gcry_error_t err;
+    const uint8_t *hash;
 
     err = gcry_md_open(&hd, GCRY_MD_SHA256, GCRY_MD_FLAG_SECURE);
     if (err != GPG_ERR_NO_ERROR) {
@@ -74,7 +75,7 @@ INTERNAL gcry_error_t sha256_md(const uint8_t *in, uint8_t *out, size_t len)
         goto exit_with_error;
     }
 
-    const uint8_t *hash = gcry_md_read(hd, 0);
+    hash = gcry_md_read(hd, 0);
     if (hash == NULL) {
         goto exit_with_error;
     }
@@ -149,7 +150,7 @@ void pws(FILE *f, uint8_t *bp, size_t len)
     mbstate_t state;
     memset(&state, 0, sizeof(state));
     wchar_t *tmp;
-    tmp = malloc((len + 1) * sizeof(wchar_t));
+    tmp = static_cast<wchar_t *>(malloc((len + 1) * sizeof(wchar_t)));
     size_t      n;
     const char *ptr = (const char *)bp;
     n = mbsrtowcs(tmp, &ptr, len, &state);
