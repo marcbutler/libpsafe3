@@ -17,7 +17,7 @@ struct safe_prologue_fields {
 
 union safe_prologue {
     struct safe_prologue_fields fields;
-    unsigned char bytes[sizeof(struct safe_prologue_fields)];
+    unsigned char               bytes[sizeof(struct safe_prologue_fields)];
 };
 
 psafe3_err safe_load_prologue(int fd, union safe_prologue *prologue);

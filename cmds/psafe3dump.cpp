@@ -9,11 +9,11 @@
 #include <wchar.h>
 #include <unistd.h>
 
-#include "psafe3/psafe.h"
-#include "psafe3/pws3.h"
+#include "lib/psafe.h"
+#include "lib/pws3.h"
 
 #include "psafe3.h"
-#include "psafe3/util.h"
+#include "lib/util.h"
 
 static void gcrypt_fatal(gcry_error_t err)
 {

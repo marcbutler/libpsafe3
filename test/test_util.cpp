@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#include "psafe3/util.h"
+#include "lib/util.h"
 
 int main(int argc, char **argv)
 {
