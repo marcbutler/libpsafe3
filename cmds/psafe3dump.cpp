@@ -12,8 +12,9 @@
 #include "lib/psafe.h"
 #include "lib/pws3.h"
 
-#include "psafe3.h"
+#include "lib/crypto.h"
 #include "lib/util.h"
+#include "psafe3.h"
 
 static void gcrypt_fatal(gcry_error_t err)
 {
@@ -43,10 +44,7 @@ int main(int argc, char **argv)
         }
     }
 
-    if (psafe3_setup() != 0) {
-        wprintf(L"Failed to initialize psafe3 library.");
-        exit(EXIT_FAILURE);
-    }
+    auto crypto = CryptoContext::the();
 
     int fd;
     fd = open(argv[1], O_RDONLY);

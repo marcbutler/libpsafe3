@@ -8,6 +8,3 @@ include_directories(AFTER "${CMAKE_SOURCE_DIR}")
 add_executable(psafe3dump psafe3dump.cpp)
 target_link_libraries(psafe3dump PRIVATE psafe3_static)
 target_include_directories(psafe3dump PUBLIC ${LIBGCRYPT_INCLUDE_DIR})
-
-add_executable(psafe3chkpass psafe3chkpass.cpp)
-target_link_libraries(psafe3chkpass PRIVATE psafe3_static)
