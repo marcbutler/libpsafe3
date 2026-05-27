@@ -1,5 +1,6 @@
 .vscode/
 .cache/
+.serena/
 **/.DS_Store
 *~
 *.bak
