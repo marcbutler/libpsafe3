@@ -1,6 +1,6 @@
 /* https://github.com/marcbutler/libpsafe3/LICENSE */
 
-#include "crypto_gcrypt.h"
+#include "crypto.h"
 #include "common.h"
 #include "util.h"
 
@@ -19,14 +19,16 @@ gcry_error_t crypto_init()
         return err;
     }
 
-    // Initialize secure memory pool to default size; currently 16KiB.
+    /* Initialize secure memory pool to default size; currently 16KiB. */
     err = gcry_control(GCRYCTL_INIT_SECMEM, 1);
     if (err != GPG_ERR_NO_ERROR) {
         return err;
     }
 
-    // Allow on the fly expansion of the secure memory area. Minimum increment
-    // is 32KiB.
+    /*
+     * Allow on the fly expansion of the secure memory area. Minimum increment
+     * is 32KiB.
+     */
     err = gcry_control(GCRYCTL_AUTO_EXPAND_SECMEM, 1);
     if (err != GPG_ERR_NO_ERROR) {
         return err;
@@ -93,6 +95,16 @@ psafe3_err crypto_stretch_key(const unsigned char *pass, size_t passlen,
     memmove(stretched_key, tmp, sizeof(sha256_hash));
     gcry_md_close(mdalgo);
     return GPG_ERR_NO_ERROR;
+}
+
+void *crypto_secure_malloc(size_t size)
+{
+    return gcry_malloc_secure(size);
+}
+
+void crypto_secure_free(void *ptr)
+{
+    gcry_free(ptr);
 }
 
 psafe3_err crypto_sha256md(const unsigned char *in, unsigned char *out,

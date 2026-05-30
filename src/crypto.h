@@ -18,3 +18,6 @@ psafe3_err crypto_stretch_key(const unsigned char *pass, size_t passlen,
 
 psafe3_err crypto_sha256md(const unsigned char *in, unsigned char *out,
                            size_t len);
+
+void *crypto_secure_malloc(size_t size);
+void  crypto_secure_free(void *ptr);

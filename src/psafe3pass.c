@@ -19,18 +19,18 @@ int main(int argc, char **argv)
     }
 
     ret = psafe3_setup();
-    if (ret != PSAFE3_SUCCESS) {
+    if (ret != PSAFE3_OK) {
         return 1;
     }
 
-    ret = psafe3_verify_password(argv[1], (unsigned char *)argv[2], (long)strlen(argv[2]));
-    if (ret != PSAFE3_SUCCESS) {
+    ret = psafe3_verify_password(argv[1], (unsigned char *)argv[2], strlen(argv[2]));
+    if (ret != PSAFE3_OK) {
         fwprintf(stderr, L"Failed: %s\n", psafe3_strerror(ret));
         return 1;
     }
 
     ret = psafe3_teardown();
-    if (ret != PSAFE3_SUCCESS) {
+    if (ret != PSAFE3_OK) {
         return 1;
     }
 

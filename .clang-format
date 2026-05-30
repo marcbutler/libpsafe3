@@ -1,4 +1,5 @@
 AlignConsecutiveDeclarations: true
+AllowShortFunctionsOnASingleLine: None
 BasedOnStyle: LLVM
 BreakBeforeBraces: Linux
 IndentCaseLabels: false
