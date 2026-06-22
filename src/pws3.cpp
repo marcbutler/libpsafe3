@@ -10,8 +10,8 @@ int psafe3_parse_header(void *ptr, size_t size, struct pws3_header *hdr)
 {
     static const char MAGIC[] = {'P', 'W', 'S', '3'};
 
-    unsigned char *bytep = ptr;
-    unsigned char *endp = ptr + size;
+    unsigned char *bytep = (unsigned char *)ptr;
+    unsigned char *endp = (unsigned char *)ptr + size;
 
     if (memcmp(bytep, MAGIC, sizeof(MAGIC)) != 0) {
         goto exit_err;

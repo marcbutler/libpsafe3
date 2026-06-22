@@ -40,7 +40,7 @@
 
 static inline uint32_t le32_deserialize(void *p)
 {
-    unsigned char *up = p;
+    unsigned char *up = (unsigned char *)p;
     return up[0] + (up[1] << 8) + (up[2] << 16) + (up[3] << 24);
 }
 

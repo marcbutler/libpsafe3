@@ -110,8 +110,9 @@ void crypto_secure_free(void *ptr)
 psafe3_err crypto_sha256md(const unsigned char *in, unsigned char *out,
                            size_t len)
 {
-    gcry_md_hd_t hd;
-    gcry_error_t err;
+    gcry_md_hd_t         hd;
+    gcry_error_t         err;
+    const unsigned char *hash;
 
     err = gcry_md_open(&hd, GCRY_MD_SHA256, GCRY_MD_FLAG_SECURE);
     if (err != GPG_ERR_NO_ERROR) {
@@ -123,7 +124,7 @@ psafe3_err crypto_sha256md(const unsigned char *in, unsigned char *out,
         goto close_with_err;
     }
 
-    const unsigned char *hash = gcry_md_read(hd, 0);
+    hash = gcry_md_read(hd, 0);
     if (hash == NULL) {
         goto close_with_err;
     }

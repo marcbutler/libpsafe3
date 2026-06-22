@@ -12,7 +12,7 @@ pkg_search_module(UUID REQUIRED uuid)
 
 include_directories(AFTER "${CMAKE_CURRENT_SOURCE_DIR}")
 
-set(LIB_SRC crypto.c psafe.c pws3.c psafe3.c safe.c util.c)
+set(LIB_SRC crypto.cpp psafe.cpp pws3.cpp psafe3.cpp safe.cpp util.cpp)
 
 # Build library objects for both static and shared libraries only once.
 add_library(psafe3_objlib OBJECT ${LIB_SRC})
@@ -30,10 +30,10 @@ set_target_properties(psafe3_static PROPERTIES OUTPUT_NAME psafe3)
 target_include_directories(psafe3_static PUBLIC ${LIBGCRYPT_INCLUDE_DIR} ${LIBGPG_ERROR_INCLUDE_DIR} ${UUID_INCLUDE_DIR})
 target_link_libraries(psafe3_static PUBLIC ${LIBGCRYPT_LIBRARY} ${LIBGPG_ERROR_LIBRARY} ${UUID_LIBRARY})
 
-add_executable(psafe3dump psafe3dump.c)
+add_executable(psafe3dump psafe3dump.cpp)
 target_link_libraries(psafe3dump PRIVATE psafe3_static)
 
-add_executable(psafe3pass psafe3pass.c)
+add_executable(psafe3pass psafe3pass.cpp)
 target_link_libraries(psafe3pass PRIVATE psafe3_static)
 
 add_subdirectory(test)
