@@ -123,7 +123,7 @@ void print_time(uint8_t *val)
             lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
 }
 
-void dump_bytes(FILE *f, uint8_t *ptr, unsigned cnt)
+void dump_bytes(FILE *f, const uint8_t *ptr, unsigned cnt)
 {
     unsigned i;
     for (i = 0; i < cnt; i++) {

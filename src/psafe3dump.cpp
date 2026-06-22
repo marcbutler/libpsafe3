@@ -1,14 +1,10 @@
 /* https://github.com/marcbutler/libpsafe3/LICENSE */
 
 #include <assert.h>
-#include <errno.h>
-#include <fcntl.h>
 #include <locale.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
 #include <wchar.h>
-#include <unistd.h>
 
+#include "mapped_file.h"
 #include "psafe.h"
 #include "pws3.h"
 
@@ -48,39 +44,20 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    int fd;
-    fd = open(argv[1], O_RDONLY);
-    if (fd < 0) {
-        wperror(L"open()");
+    auto mapping = MappedFile::open(argv[1]);
+    if (!mapping) {
+        fwprintf(stderr, L"Failed to open file: %s\n",
+                 mapping.error().message().c_str());
         exit(EXIT_FAILURE);
     }
-
-    struct stat file_info;
-    if (fstat(fd, &file_info) < 0) {
-        wperror(L"fstat()");
-        exit(EXIT_FAILURE);
-    }
-    size_t sz;
-    sz = file_info.st_size;
-
-    unsigned char *ptr;
-    ptr = (unsigned char *)mmap(NULL, sz, PROT_READ, MAP_PRIVATE, fd, 0);
-    if (ptr == MAP_FAILED) {
-        wperror(L"mmap()");
-        exit(EXIT_FAILURE);
-    }
+    const unsigned char *ptr = (const unsigned char *)mapping->base();
+    size_t               sz  = mapping->size();
 
     struct pws3_header hdr;
-    if (psafe3_parse_header(ptr, sz, &hdr) != 0) {
+    if (psafe3_parse_header((void *)ptr, sz, &hdr) != 0) {
         fwprintf(stderr, L"Error reading psafe3 header.");
         exit(EXIT_FAILURE);
     }
-
-    checked_close(fd);
-    /*
-     * After closing the file descriptor unmapping the memory will close the
-     * file handle.
-     */
 
     struct safe_sec *sec;
     sec = (struct safe_sec *)gcry_malloc_secure(sizeof(*sec));
@@ -116,8 +93,8 @@ int main(int argc, char **argv)
     size_t bcnt;
     bcnt = safe_size / TWOFISH_SIZE;
     assert(bcnt > 0);
-    uint8_t *encp;
-    uint8_t *safep;
+    const uint8_t *encp;
+    uint8_t       *safep;
     encp = ptr + 4 + sizeof(hdr);
     safep = safe;
     uint8_t *safe_end = safep + safe_size;
@@ -186,11 +163,6 @@ int main(int argc, char **argv)
     if (psafe3_teardown() != 0) {
         wprintf(L"Error terminating psafe3 library.");
         exit(EXIT_FAILURE);
-    }
-
-    ret = munmap(ptr, sz);
-    if (ret < 0) {
-        wperror(L"munmap()");
     }
 
     exit(0);
