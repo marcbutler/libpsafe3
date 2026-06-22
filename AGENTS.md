@@ -1,14 +1,20 @@
-# agents.md
+# AGENTS.md
 
 Guidance for AI agents working in this repository.
 
 ## General behaviour
 
+Use the session libpsafe3 and warn when it is not available.
+
 When there is no single clear path forward, stop and ask. Present alternatives with trade-offs rather than picking one unilaterally.
 
 After making any change, list the minimal steps needed to verify it works — keep this terse (commands only, no prose).
 
-Do not interact with git (stage, commit, push, branch, reset, etc.) unless explicitly asked.
+### git
+
+- The user is responsible for managing version control.
+- Use git to move or delete files, all other operations require explicit acknowledgement.
+- Prompt for git operations iff they are required intermediate steps for a larger goal.
 
 Look for opportunities to suggest new tests or tooling; call these out as a short note after completing a task.
 
@@ -39,4 +45,4 @@ Dependencies: `libgcrypt-dev`, `uuid-dev` (Homebrew: `libgcrypt`, `ossp-uuid`).
 
 - `refs/formatV3.txt` — Password Safe v3 file format specification.
 - `refs/rfc2104.txt` — HMAC specification.
-- `metadata/header-fields.csv`, `metadata/database-fields.csv` — field type tables for the psafe3 header and database sections.
+- `data/header-fields.csv`, `data/database-fields.csv` — field type tables for the psafe3 header and database sections.

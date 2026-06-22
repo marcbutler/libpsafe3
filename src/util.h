@@ -2,9 +2,11 @@
 /* https://github.com/marcbutler/libpsafe3/LICENSE */
 
 #include <assert.h>
+#include <cstring>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string>
 
 #define BYTE unsigned char
 
@@ -52,7 +54,13 @@ static inline void assert_ptr_diff(void *p1, void *p2, ptrdiff_t offset)
     assert(ABS(diff) == offset);
 }
 
+inline std::wstring widen(const char *s)
+{
+    if (!s) return {};
+    return std::wstring(s, s + std::strlen(s));
+}
+
 void crash_actual(const char *path, const char *func);
 void checked_close(int fd);
 int  read_from_terminal(const char *prompt, char *buf, size_t *bufsize);
-void wperror(wchar_t *msg);
+void wperror(const wchar_t *msg);

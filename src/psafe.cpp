@@ -3,9 +3,9 @@
 #include <errno.h>
 #include <gcrypt.h>
 #include <getopt.h>
-#include <inttypes.h>
+#include <iomanip>
+#include <iostream>
 #include <locale.h>
-#include <stdio.h>
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
@@ -17,8 +17,8 @@
 
 static void gcrypt_fatal(gcry_error_t err)
 {
-    fwprintf(stderr, L"gcrypt error %s/%s\n", gcry_strsource(err),
-             gcry_strerror(err));
+    std::wcerr << L"gcrypt error " << widen(gcry_strsource(err))
+               << L"/" << widen(gcry_strerror(err)) << L'\n';
     exit(EXIT_FAILURE);
 }
 
@@ -113,84 +113,91 @@ INTERNAL gcry_error_t extract_random_key(const uint8_t *stretchkey,
     return GPG_ERR_NO_ERROR;
 }
 
-void print_time(uint8_t *val)
+static void print_time(std::wostream &out, uint8_t *val)
 {
     struct tm *lt;
     time_t     time;
     time = le32_deserialize(val);
-    lt = gmtime(&time);
-    wprintf(L"%d-%d-%d %02d:%02d:%02d", 1900 + lt->tm_year, lt->tm_mon,
-            lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
+    lt   = gmtime(&time);
+    auto fill = out.fill(L'0');
+    out << std::dec
+        << (1900 + lt->tm_year) << L'-' << lt->tm_mon << L'-' << lt->tm_mday
+        << L' '
+        << std::setw(2) << lt->tm_hour << L':'
+        << std::setw(2) << lt->tm_min  << L':'
+        << std::setw(2) << lt->tm_sec;
+    out.fill(fill);
 }
 
-void dump_bytes(FILE *f, const uint8_t *ptr, unsigned cnt)
+void dump_bytes(std::wostream &out, const uint8_t *ptr, unsigned cnt)
 {
-    unsigned i;
-    for (i = 0; i < cnt; i++) {
-        fwprintf(f, L"%02x", *ptr++);
+    auto flags = out.flags();
+    auto fill  = out.fill(L'0');
+    out << std::hex;
+    for (unsigned i = 0; i < cnt; i++) {
+        out << std::setw(2) << static_cast<unsigned>(*ptr++);
     }
+    out.flags(flags);
+    out.fill(fill);
 }
 
-void print_uuid(uint8_t *uuid)
+static void print_uuid(std::wostream &out, uint8_t *uuid)
 {
-    dump_bytes(stdout, uuid, 4);
-    putwc('-', stdout);
-    dump_bytes(stdout, uuid + 4, 2);
-    putwc('-', stdout);
-    dump_bytes(stdout, uuid + 6, 2);
-    putwc('-', stdout);
-    dump_bytes(stdout, uuid + 8, 2);
-    putwc('-', stdout);
-    dump_bytes(stdout, uuid + 10, 6);
+    dump_bytes(out, uuid, 4);
+    out << L'-';
+    dump_bytes(out, uuid + 4, 2);
+    out << L'-';
+    dump_bytes(out, uuid + 6, 2);
+    out << L'-';
+    dump_bytes(out, uuid + 8, 2);
+    out << L'-';
+    dump_bytes(out, uuid + 10, 6);
 }
 
-/* Print out utf-8 string. */
-void pws(FILE *f, uint8_t *bp, size_t len)
+static void pws(std::wostream &out, uint8_t *bp, size_t len)
 {
     mbstate_t state;
     memset(&state, 0, sizeof(state));
-    wchar_t *tmp;
-    tmp = (wchar_t *)malloc((len + 1) * sizeof(wchar_t));
-    size_t      n;
+    wchar_t    *tmp = (wchar_t *)malloc((len + 1) * sizeof(wchar_t));
     const char *ptr = (const char *)bp;
-    n = mbsrtowcs(tmp, &ptr, len, &state);
+    size_t      n   = mbsrtowcs(tmp, &ptr, len, &state);
     tmp[n] = L'\0';
-    fputws(tmp, f);
+    out << tmp;
     free(tmp);
 }
 
-void dump_hdr_field(FILE *f, struct field *fld)
+void dump_hdr_field(std::wostream &out, struct field *fld)
 {
     switch (fld->type) {
     case 0x2 ... 0x3:
     case 0x5 ... 0xb:
     case 0xf ... 0x11:
-        pws(f, fld->val, fld->len);
+        pws(out, fld->val, fld->len);
         break;
     case 0x1:
-        print_uuid(fld->val);
+        print_uuid(out, fld->val);
         break;
     case 0x4:
-        print_time(fld->val);
+        print_time(out, fld->val);
         break;
     }
 }
 
-void dump_db_field(FILE *f, struct field *fld)
+void dump_db_field(std::wostream &out, struct field *fld)
 {
     switch (fld->type) {
     case 0x2 ... 0x6:
     case 0xd ... 0x10:
     case 0x14:
     case 0x16:
-        pws(f, fld->val, fld->len);
+        pws(out, fld->val, fld->len);
         break;
     case 0x7 ... 0xa:
     case 0xc:
-        print_time(fld->val);
+        print_time(out, fld->val);
         break;
     case 0x1:
-        print_uuid(fld->val);
+        print_uuid(out, fld->val);
         break;
     }
 }
@@ -246,26 +253,23 @@ void term_decrypt_ctx(struct crypto_ctx *ctx)
     gcry_md_close(ctx->hmac);
 }
 
-void dump_prologue(FILE *f, struct pws3_header *pro)
+void dump_prologue(std::wostream &out, struct pws3_header *pro)
 {
-    int i;
-#define EOL() fputwc('\n', f)
-    fputws(L"SALT   ", f);
-    dump_bytes(f, pro->salt, 32);
-    EOL();
-    fwprintf(f, L"ITER   %" PRIu32 L"\n", pro->iter);
-    fputws(L"H(P')  ", f);
-    dump_bytes(f, pro->h_pprime, SHA256_SIZE);
-    EOL();
-    for (i = 0; i < 4; i++) {
-        fwprintf(f, L"B%d     ", i);
-        dump_bytes(f, pro->b[i], 16);
-        EOL();
+    out << L"SALT   ";
+    dump_bytes(out, pro->salt, 32);
+    out << L'\n';
+    out << L"ITER   " << pro->iter << L'\n';
+    out << L"H(P')  ";
+    dump_bytes(out, pro->h_pprime, SHA256_SIZE);
+    out << L'\n';
+    for (int i = 0; i < 4; i++) {
+        out << L"B" << i << L"     ";
+        dump_bytes(out, pro->b[i], 16);
+        out << L'\n';
     }
-    fputws(L"IV     ", f);
-    dump_bytes(f, pro->iv, 16);
-    EOL();
-#undef EOL
+    out << L"IV     ";
+    dump_bytes(out, pro->iv, 16);
+    out << L'\n';
 }
 
 gcry_error_t stretch_and_check_pass(const char *pass, size_t passlen,

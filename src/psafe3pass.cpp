@@ -1,11 +1,11 @@
 /* https://github.com/marcbutler/libpsafe3/LICENSE */
 
+#include <iostream>
 #include <locale.h>
-#include <stdio.h>
 #include <string.h>
-#include <wchar.h>
 
 #include <psafe3.h>
+#include "util.h"
 
 int main(int argc, char **argv)
 {
@@ -14,7 +14,7 @@ int main(int argc, char **argv)
     setlocale(LC_ALL, "");
 
     if (argc != 3) {
-        fwprintf(stderr, L"Usage: %s <file> <password>\n", argv[0]);
+        std::wcerr << L"Usage: " << widen(argv[0]) << L" <file> <password>\n";
         return 1;
     }
 
@@ -25,7 +25,7 @@ int main(int argc, char **argv)
 
     ret = psafe3_verify_password(argv[1], (unsigned char *)argv[2], strlen(argv[2]));
     if (ret != PSAFE3_OK) {
-        fwprintf(stderr, L"Failed: %s\n", psafe3_strerror(ret));
+        std::wcerr << L"Failed: " << widen(psafe3_strerror(ret)) << L'\n';
         return 1;
     }
 

@@ -1,18 +1,16 @@
 /* https://github.com/marcbutler/libpsafe3/LICENSE */
 
 #include <errno.h>
-#include <stdio.h>
+#include <iostream>
 #include <string.h>
 #include <termios.h>
 #include <unistd.h>
-#include <wchar.h>
 
 #include "util.h"
 
 void crash_actual(const char *path, const char *func)
 {
-    /* TODO See if arguments should be wide char. */
-    fwprintf(stderr, L"CRASH %s:%s\n", path, func);
+    std::wcerr << L"CRASH " << widen(path) << L":" << widen(func) << L'\n';
 #ifdef NDEBUG
     abort();
 #else
@@ -30,12 +28,12 @@ void crash_actual(const char *path, const char *func)
 /*
  * Wide character version of perror().
  */
-void wperror(wchar_t *msg)
+void wperror(const wchar_t *msg)
 {
     if (msg == NULL || *msg == 0) {
-        fwprintf(stderr, L"%s", strerror(errno));
+        std::wcerr << widen(strerror(errno));
     } else {
-        fwprintf(stderr, L"%s: %s", msg, strerror(errno));
+        std::wcerr << msg << L": " << widen(strerror(errno));
     }
 }
 

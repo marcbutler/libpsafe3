@@ -2,6 +2,7 @@
 /* https://github.com/marcbutler/libpsafe3/LICENSE */
 
 #include <gcrypt.h>
+#include <iosfwd>
 
 #include "pws3.h"
 
@@ -29,10 +30,10 @@ struct crypto_ctx {
 int  init_decrypt_ctx(struct crypto_ctx *ctx, struct pws3_header *pro,
                       struct safe_sec *sec);
 void term_decrypt_ctx(struct crypto_ctx *ctx);
-void dump_bytes(FILE *f, const uint8_t *ptr, unsigned cnt);
-void dump_db_field(FILE *f, struct field *fld);
-void dump_hdr_field(FILE *f, struct field *fld);
-void dump_prologue(FILE *f, struct pws3_header *pro);
+void dump_bytes(std::wostream &out, const uint8_t *ptr, unsigned cnt);
+void dump_db_field(std::wostream &out, struct field *fld);
+void dump_hdr_field(std::wostream &out, struct field *fld);
+void dump_prologue(std::wostream &out, struct pws3_header *pro);
 
 extern gcry_error_t stretch_and_check_pass(const char *pass, size_t passlen,
                                            struct pws3_header *pro,
