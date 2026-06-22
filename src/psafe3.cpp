@@ -1,4 +1,4 @@
-/* https://github.com/marcbutler/libpsafe3/LICENSE */
+// https://github.com/marcbutler/libpsafe3/LICENSE
 
 #include <errno.h>
 #include <fcntl.h>
@@ -27,7 +27,7 @@ psafe3_err psafe3_load(psafe3_handle *safe, const char *path)
         return gcry_error_from_errno(errno);
     }
 
-    /* TODO Check that the file meets the minimum size expectation. */
+    // TODO Check that the file meets the minimum size expectation.
 
     void *memptr;
     memptr = mmap(NULL, stbuf.st_size, PROT_READ, MAP_FILE, fd, 0);

@@ -1,4 +1,4 @@
-/* https://github.com/marcbutler/libpsafe3/LICENSE */
+// https://github.com/marcbutler/libpsafe3/LICENSE
 
 #include <iostream>
 #include <locale.h>

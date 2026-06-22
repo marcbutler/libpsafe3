@@ -1,4 +1,4 @@
-/* https://github.com/marcbutler/libpsafe3/LICENSE */
+// https://github.com/marcbutler/libpsafe3/LICENSE
 
 #include <cassert>
 #include <cerrno>
@@ -9,7 +9,7 @@
 static const char TEST_PSAFE3[] = TEST_DATA_DIR "/test.psafe3";
 static const size_t TEST_PSAFE3_SIZE = 824;
 
-/* PWS3 magic bytes at offset 0 */
+// PWS3 magic bytes at offset 0
 static const unsigned char PWS3_MAGIC[] = {'P', 'W', 'S', '3'};
 
 static void test_open_valid()

@@ -1,4 +1,4 @@
-/* https://github.com/marcbutler/libpsafe3/LICENSE */
+// https://github.com/marcbutler/libpsafe3/LICENSE
 
 #include <errno.h>
 #include <gcrypt.h>
@@ -22,11 +22,9 @@ static void gcrypt_fatal(gcry_error_t err)
     exit(EXIT_FAILURE);
 }
 
-/*
- * Perform hash based stretching on the provided password.
- *
- * http://www.schneier.com/paper-low-entropy.pdf
- */
+// Perform hash based stretching on the provided password.
+//
+// http://www.schneier.com/paper-low-entropy.pdf
 INTERNAL gcry_error_t stretch_key(const char *pass, size_t passlen,
                                   const struct pws3_header *pro, uint8_t *skey)
 {
@@ -56,9 +54,7 @@ INTERNAL gcry_error_t stretch_key(const char *pass, size_t passlen,
     return GPG_ERR_NO_ERROR;
 }
 
-/*
- * Compute the SHA256 message digest of the input buffer.
- */
+// Compute the SHA256 message digest of the input buffer.
 INTERNAL gcry_error_t sha256_md(const uint8_t *in, uint8_t *out, size_t len)
 {
     gcry_md_hd_t   hd;
@@ -86,9 +82,7 @@ exit_with_error:
     return err;
 }
 
-/*
- * Decrypt the random key using the stretch key.
- */
+// Decrypt the random key using the stretch key.
 INTERNAL gcry_error_t extract_random_key(const uint8_t *stretchkey,
                                          const uint8_t *fst, const uint8_t *snd,
                                          uint8_t *randkey)
@@ -293,7 +287,7 @@ gcry_error_t stretch_and_check_pass(const char *pass, size_t passlen,
         goto exitfn;
     }
 
-    /* Extract random keys K and L. */
+    // Extract random keys K and L.
     err = extract_random_key(sec->pprime, pro->b[0], pro->b[1], sec->rand_k);
     if (err != GPG_ERR_NO_ERROR) {
         goto exitfn;

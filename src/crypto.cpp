@@ -1,4 +1,4 @@
-/* https://github.com/marcbutler/libpsafe3/LICENSE */
+// https://github.com/marcbutler/libpsafe3/LICENSE
 
 #include "crypto.h"
 #include "common.h"
@@ -9,7 +9,7 @@
 gcry_error_t crypto_init()
 {
     if (!gcry_check_version(GCRYPT_VERSION)) {
-        /* TODO Provide diagnostic information. */
+        // TODO Provide diagnostic information.
         return -1;
     }
 
@@ -19,16 +19,14 @@ gcry_error_t crypto_init()
         return err;
     }
 
-    /* Initialize secure memory pool to default size; currently 16KiB. */
+    // Initialize secure memory pool to default size; currently 16KiB.
     err = gcry_control(GCRYCTL_INIT_SECMEM, 1);
     if (err != GPG_ERR_NO_ERROR) {
         return err;
     }
 
-    /*
-     * Allow on the fly expansion of the secure memory area. Minimum increment
-     * is 32KiB.
-     */
+    // Allow on the fly expansion of the secure memory area. Minimum increment
+    // is 32KiB.
     err = gcry_control(GCRYCTL_AUTO_EXPAND_SECMEM, 1);
     if (err != GPG_ERR_NO_ERROR) {
         return err;
@@ -50,10 +48,8 @@ gcry_error_t crypto_term()
         return err;
     }
 
-    /*
-     * After secure memory support is terminated, assume all secure heap memory
-     * is now invalid.
-     */
+    // After secure memory support is terminated, assume all secure heap memory
+    // is now invalid.
     err = gcry_control(GCRYCTL_TERM_SECMEM);
     if (GCRY_FAILED(err)) {
         return err;

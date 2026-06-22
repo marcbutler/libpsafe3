@@ -10,6 +10,8 @@ When there is no single clear path forward, stop and ask. Present alternatives w
 
 After making any change, list the minimal steps needed to verify it works — keep this terse (commands only, no prose).
 
+For a proposed change the user to authorize all edits to achieve that change only.
+
 ### git
 
 - The user is responsible for managing version control.

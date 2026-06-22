@@ -1,5 +1,5 @@
 #pragma once
-/* https://github.com/marcbutler/libpsafe3/LICENSE */
+// https://github.com/marcbutler/libpsafe3/LICENSE
 
 #include <assert.h>
 #include <cstring>
@@ -10,13 +10,13 @@
 
 #define BYTE unsigned char
 
-/* Twofish block size in bytes. */
+// Twofish block size in bytes.
 #define TWOFISH_SIZE 16
 
-/* SHA-256 size in bytes. */
+// SHA-256 size in bytes.
 #define SHA256_SIZE 32
 
-/* Prevent linking to symbol. */
+// Prevent linking to symbol.
 #define INTERNAL __attribute__((visibility("hidden")))
 
 #define KIB(n) ((n) * 1024)

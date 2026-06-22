@@ -1,4 +1,4 @@
-/* https://github.com/marcbutler/libpsafe3/LICENSE */
+// https://github.com/marcbutler/libpsafe3/LICENSE
 
 #include <errno.h>
 #include <iostream>
@@ -14,7 +14,7 @@ void crash_actual(const char *path, const char *func)
 #ifdef NDEBUG
     abort();
 #else
-/* Prefer clang. */
+// Prefer clang.
 #    if __clang__
     __builtin_debugtrap();
 #    elif __GNUC__
@@ -25,9 +25,7 @@ void crash_actual(const char *path, const char *func)
 #endif
 }
 
-/*
- * Wide character version of perror().
- */
+// Wide character version of perror().
 void wperror(const wchar_t *msg)
 {
     if (msg == NULL || *msg == 0) {
@@ -37,9 +35,7 @@ void wperror(const wchar_t *msg)
     }
 }
 
-/*
- * Close file descriptor. On error output message to stderr.
- */
+// Close file descriptor. On error output message to stderr.
 void checked_close(int fd)
 {
     int ret;
@@ -47,18 +43,14 @@ void checked_close(int fd)
     assert_fd(fd);
     ret = close(fd);
     if (ret != 0) {
-        /*
-         * Though POSIX allows the descriptor to still be valid for errors other
-         * than EINVAL, do not attempt to call close() again even for EINTR. See
-         * the Linux close(2) man page as to why.
-         */
+        // Though POSIX allows the descriptor to still be valid for errors other
+        // than EINVAL, do not attempt to call close() again even for EINTR. See
+        // the Linux close(2) man page as to why.
         wperror(L"close()");
     }
 }
 
-/*
- * Read a line from the terminal. The newline character is removed.
- */
+// Read a line from the terminal. The newline character is removed.
 int read_from_terminal(const char *prompt, char *buf, size_t *bufsize)
 {
     assert(prompt && buf && bufsize);
