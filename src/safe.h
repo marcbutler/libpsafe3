@@ -1,7 +1,33 @@
 #pragma once
 // https://github.com/marcbutler/libpsafe3/LICENSE
 
+#include <expected>
+#include <filesystem>
+#include <system_error>
+#include <vector>
+
 #include "common.h"
+#include "error.h"
+#include "mapped_memory.h"
+
+namespace psafe3
+{
+
+class Safe
+{
+  public:
+    static std::expected<Safe, std::error_code>
+    load(const std::filesystem::path &path,
+         const std::vector<std::byte> pass_phrase);
+
+  private:
+    MappedMemory ondisk_;
+
+    Safe(MappedMemory &&ondisk) : ondisk_(std::move(ondisk))
+    {
+    }
+};
+} // namespace psafe3
 
 struct safe {
     uintptr_t file_image;
@@ -23,7 +49,7 @@ enum safe_prologue_off {
 };
 
 unsigned char const *safe_salt(struct safe *);
-uint32_t safe_iter(struct safe *);
+uint32_t             safe_iter(struct safe *);
 unsigned char const *safe_pass_hash(struct safe *);
 unsigned char const *safe_b(struct safe *, unsigned);
 unsigned char const *safe_iv(struct safe *);

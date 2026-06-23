@@ -10,6 +10,7 @@
 #include <unistd.h>
 
 #include "mapped_file.h"
+#include "mapped_memory.h"
 #include "util.h"
 
 MappedFile::MappedFile(uintptr_t base, size_t size) noexcept
@@ -55,8 +56,22 @@ void MappedFile::close()
     size_ = 0;
 }
 
+MappedMemory MappedFile::detach() noexcept
+{
+    MappedMemory region(base_, size_);
+    base_ = 0;
+    size_ = 0;
+    return region;
+}
+
 uintptr_t MappedFile::base() const noexcept { return base_; }
 size_t    MappedFile::size() const noexcept { return size_; }
+
+std::span<const std::byte> MappedFile::slice(size_t offset, size_t length) const noexcept
+{
+    assert(offset + length <= size_);
+    return {reinterpret_cast<const std::byte *>(base_) + offset, length};
+}
 
 std::expected<MappedFile, std::error_code> MappedFile::open(const char *path)
 {

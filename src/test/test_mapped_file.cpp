@@ -5,6 +5,7 @@
 #include <cstring>
 
 #include "mapped_file.h"
+#include "mapped_memory.h"
 
 static const char TEST_PSAFE3[] = TEST_DATA_DIR "/test.psafe3";
 static const size_t TEST_PSAFE3_SIZE = 824;
@@ -92,6 +93,52 @@ static void test_move_assign()
     assert(r2.value().size() == 0);
 }
 
+static void test_detach()
+{
+    auto result = MappedFile::open(TEST_PSAFE3);
+    assert(result.has_value());
+
+    uintptr_t orig_base = result.value().base();
+    size_t    orig_size = result.value().size();
+
+    MappedMemory region = result.value().detach();
+
+    // MappedFile is now closed
+    assert(result.value().base() == 0);
+    assert(result.value().size() == 0);
+
+    // region owns the original mapping
+    assert(region.size() == orig_size);
+    assert(reinterpret_cast<uintptr_t>(region.data()) == orig_base);
+
+    // content is accessible via span()
+    auto s = region.span();
+    assert(s.size() == orig_size);
+    assert(memcmp(s.data(), PWS3_MAGIC, sizeof(PWS3_MAGIC)) == 0);
+}
+
+static void test_slice()
+{
+    auto result = MappedFile::open(TEST_PSAFE3);
+    assert(result.has_value());
+
+    auto &mf = result.value();
+
+    // slice at offset 0 matches PWS3 magic
+    auto magic = mf.slice(0, sizeof(PWS3_MAGIC));
+    assert(magic.size() == sizeof(PWS3_MAGIC));
+    assert(memcmp(magic.data(), PWS3_MAGIC, sizeof(PWS3_MAGIC)) == 0);
+
+    // slice at non-zero offset
+    auto mid = mf.slice(4, 32);
+    assert(mid.size() == 32);
+    assert(mid.data() == reinterpret_cast<const std::byte *>(mf.base()) + 4);
+
+    // zero-length slice
+    auto empty = mf.slice(0, 0);
+    assert(empty.size() == 0);
+}
+
 static void test_move_assign_self()
 {
     auto result = MappedFile::open(TEST_PSAFE3);
@@ -120,6 +167,8 @@ int main(int argc, char **argv)
     test_move_ctor();
     test_move_assign();
     test_move_assign_self();
+    test_detach();
+    test_slice();
 
     return 0;
 }

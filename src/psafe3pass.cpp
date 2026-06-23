@@ -1,36 +1,25 @@
 // https://github.com/marcbutler/libpsafe3/LICENSE
 
+#include <cstring>
 #include <iostream>
-#include <locale.h>
-#include <string.h>
+#include <vector>
 
-#include <psafe3.h>
-#include "util.h"
+#include "safe.h"
 
 int main(int argc, char **argv)
 {
-    psafe3_err ret;
-
-    setlocale(LC_ALL, "");
-
     if (argc != 3) {
-        std::wcerr << L"Usage: " << widen(argv[0]) << L" <file> <password>\n";
+        std::cerr << "Usage: " << argv[0] << " <file> <password>\n";
         return 1;
     }
 
-    ret = psafe3_setup();
-    if (ret != PSAFE3_OK) {
-        return 1;
-    }
+    const auto *pass = reinterpret_cast<const std::byte *>(argv[2]);
+    std::vector<std::byte> pass_phrase(pass, pass + std::strlen(argv[2]));
 
-    ret = psafe3_verify_password(argv[1], (unsigned char *)argv[2], strlen(argv[2]));
-    if (ret != PSAFE3_OK) {
-        std::wcerr << L"Failed: " << widen(psafe3_strerror(ret)) << L'\n';
-        return 1;
-    }
-
-    ret = psafe3_teardown();
-    if (ret != PSAFE3_OK) {
+    auto safe_path = std::filesystem::path(argv[1]);
+    auto result = psafe3::Safe::load(safe_path, std::move(pass_phrase));
+    if (!result) {
+        std::cerr << "Failed: " << result.error().message() << '\n';
         return 1;
     }
 

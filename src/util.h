@@ -8,6 +8,8 @@
 #include <stdlib.h>
 #include <string>
 
+#include <utility.h>
+
 #define BYTE unsigned char
 
 // Twofish block size in bytes.
