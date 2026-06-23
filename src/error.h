@@ -29,8 +29,9 @@ inline std::error_code make_error_code(gpg_error_t e)
 
 enum class Error : int {
     invalid_magic = 1,
-    invalid_password,
+    invalid_pass_phrase,
     corrupt_file,
+    hmac_mismatch,
 };
 
 struct ErrorCategory : std::error_category {
@@ -43,10 +44,12 @@ struct ErrorCategory : std::error_category {
         switch (static_cast<Error>(ev)) {
         case Error::invalid_magic:
             return "invalid file magic";
-        case Error::invalid_password:
-            return "invalid password";
+        case Error::invalid_pass_phrase:
+            return "invalid pass phrase";
         case Error::corrupt_file:
             return "corrupt file";
+        case Error::hmac_mismatch:
+            return "hmac mismatch";
         default:
             return "unknown error";
         }

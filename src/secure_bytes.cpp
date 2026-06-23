@@ -47,9 +47,19 @@ std::byte* SecureBytes::data() noexcept
     return static_cast<std::byte*>(data_);
 }
 
+std::byte* SecureBytes::data(size_t offset) noexcept
+{
+    return static_cast<std::byte*>(data_) + offset;
+}
+
 const std::byte* SecureBytes::data() const noexcept
 {
     return static_cast<const std::byte*>(data_);
+}
+
+const std::byte* SecureBytes::data(size_t offset) const noexcept
+{
+    return static_cast<const std::byte*>(data_) + offset;
 }
 
 size_t SecureBytes::size() const noexcept

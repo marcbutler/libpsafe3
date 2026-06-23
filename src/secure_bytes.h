@@ -19,7 +19,9 @@ public:
     SecureBytes& operator=(const SecureBytes&) = delete;
 
     std::byte* data() noexcept;
+    std::byte* data(size_t offset) noexcept;
     const std::byte* data() const noexcept;
+    const std::byte* data(size_t offset) const noexcept;
     size_t size() const noexcept;
     std::span<std::byte> span() noexcept;
     std::span<const std::byte> span() const noexcept;

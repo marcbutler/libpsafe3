@@ -3,12 +3,14 @@
 
 #include <expected>
 #include <filesystem>
+#include <span>
 #include <system_error>
 #include <vector>
 
 #include "common.h"
 #include "error.h"
 #include "mapped_memory.h"
+#include "secure_bytes.h"
 
 namespace psafe3 {
 
@@ -19,10 +21,25 @@ public:
         const std::vector<std::byte> pass_phrase);
 
 private:
-    MappedMemory ondisk_;
+    struct Field {
+        uint32_t len;
+        uint8_t type;
+        std::span<std::byte> data;
+    };
 
-    Safe(MappedMemory&& ondisk)
+    struct Record {
+        std::span<std::byte> data;
+        std::vector<Field> fields;
+    };
+
+    MappedMemory ondisk_;
+    SecureBytes decrypted_;
+    std::vector<Field> header_;
+    std::vector<Record> database_;
+
+    Safe(MappedMemory&& ondisk, SecureBytes&& decrypted)
         : ondisk_(std::move(ondisk))
+        , decrypted_(std::move(decrypted))
     {
     }
 };
