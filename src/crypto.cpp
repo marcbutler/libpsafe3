@@ -66,13 +66,13 @@ gcry_error_t crypto_term()
     return GPG_ERR_NO_ERROR;
 }
 
-psafe3_err crypto_stretch_key(const unsigned char *pass, size_t passlen,
-                              const sha256_hash salt, long iterations,
-                              sha256_hash stretched_key)
+psafe3_err crypto_stretch_key(const unsigned char* pass, size_t passlen,
+    const sha256_hash salt, long iterations,
+    sha256_hash stretched_key)
 {
     gcry_md_hd_t mdalgo;
-    psafe3_err   err;
-    sha256_hash  tmp;
+    psafe3_err err;
+    sha256_hash tmp;
 
     err = gcry_md_open(&mdalgo, GCRY_MD_SHA256, GCRY_MD_FLAG_SECURE);
     if (CRYPTO_FAIL(err)) {
@@ -96,88 +96,85 @@ psafe3_err crypto_stretch_key(const unsigned char *pass, size_t passlen,
     return GPG_ERR_NO_ERROR;
 }
 
-void *crypto_secure_malloc(size_t size)
+void* crypto_secure_malloc(size_t size)
 {
     return gcry_malloc_secure(size);
 }
 
-void crypto_secure_free(void *ptr)
+void crypto_secure_free(void* ptr)
 {
     gcry_free(ptr);
 }
 
-namespace psafe3
-{
+namespace psafe3 {
 
-namespace
-{
+namespace {
 
-struct MdHandle {
-    gcry_md_hd_t hd = nullptr;
-    ~MdHandle()
-    {
-        if (hd) {
-            gcry_md_close(hd);
-        }
-    }
-};
-
-std::error_code do_init()
-{
-    if (!gcry_check_version(GCRYPT_VERSION)) {
-        return make_error_code(GPG_ERR_GENERAL);
-    }
-
-    gcry_error_t err;
-    err = gcry_control(GCRYCTL_SUSPEND_SECMEM_WARN);
-    if (err) {
-        return make_error_code(err);
-    }
-    err = gcry_control(GCRYCTL_INIT_SECMEM, 1);
-    if (err) {
-        return make_error_code(err);
-    }
-    err = gcry_control(GCRYCTL_AUTO_EXPAND_SECMEM, 1);
-    if (err) {
-        return make_error_code(err);
-    }
-    err = gcry_control(GCRYCTL_RESUME_SECMEM_WARN);
-    if (err) {
-        return make_error_code(err);
-    }
-
-    struct CleanupOnTermination {
-        ~CleanupOnTermination()
+    struct MdHandle {
+        gcry_md_hd_t hd = nullptr;
+        ~MdHandle()
         {
-            gcry_control(GCRYCTL_SUSPEND_SECMEM_WARN);
-            gcry_control(GCRYCTL_TERM_SECMEM);
-            gcry_control(GCRYCTL_RESUME_SECMEM_WARN);
+            if (hd) {
+                gcry_md_close(hd);
+            }
         }
     };
-    static CleanupOnTermination cleanup;
 
-    return {};
-}
+    std::error_code do_init()
+    {
+        if (!gcry_check_version(GCRYPT_VERSION)) {
+            return make_error_code(GPG_ERR_GENERAL);
+        }
 
-std::error_code ensure_init()
-{
-    static const std::error_code result = do_init();
-    return result;
-}
+        gcry_error_t err;
+        err = gcry_control(GCRYCTL_SUSPEND_SECMEM_WARN);
+        if (err) {
+            return make_error_code(err);
+        }
+        err = gcry_control(GCRYCTL_INIT_SECMEM, 1);
+        if (err) {
+            return make_error_code(err);
+        }
+        err = gcry_control(GCRYCTL_AUTO_EXPAND_SECMEM, 1);
+        if (err) {
+            return make_error_code(err);
+        }
+        err = gcry_control(GCRYCTL_RESUME_SECMEM_WARN);
+        if (err) {
+            return make_error_code(err);
+        }
+
+        struct CleanupOnTermination {
+            ~CleanupOnTermination()
+            {
+                gcry_control(GCRYCTL_SUSPEND_SECMEM_WARN);
+                gcry_control(GCRYCTL_TERM_SECMEM);
+                gcry_control(GCRYCTL_RESUME_SECMEM_WARN);
+            }
+        };
+        static CleanupOnTermination cleanup;
+
+        return { };
+    }
+
+    std::error_code ensure_init()
+    {
+        static const std::error_code result = do_init();
+        return result;
+    }
 
 } // namespace
 
 std::expected<SecureBytes, std::error_code>
-stretch_key(std::span<const std::byte>              pass,
-            std::span<const std::byte, SHA256_SIZE> salt, uint32_t iterations)
+stretch_key(std::span<const std::byte> pass,
+    std::span<const std::byte, SHA256_SIZE> salt, uint32_t iterations)
 {
     if (auto err = ensure_init(); err) {
         return std::unexpected(err);
     }
 
     psafe3::Handle<gcry_md_hd_t, gcry_md_close> hd;
-    gcry_error_t err =
-        gcry_md_open(&hd.actual, GCRY_MD_SHA256, GCRY_MD_FLAG_SECURE);
+    gcry_error_t err = gcry_md_open(&hd.actual, GCRY_MD_SHA256, GCRY_MD_FLAG_SECURE);
     if (err) {
         return std::unexpected(make_error_code(err));
     }
@@ -205,8 +202,7 @@ sha256(std::span<const std::byte> data)
     }
 
     psafe3::Handle<gcry_md_hd_t, gcry_md_close> hd;
-    gcry_error_t err =
-        gcry_md_open(&hd.actual, GCRY_MD_SHA256, GCRY_MD_FLAG_SECURE);
+    gcry_error_t err = gcry_md_open(&hd.actual, GCRY_MD_SHA256, GCRY_MD_FLAG_SECURE);
     if (err) {
         return std::unexpected(make_error_code(err));
     }
@@ -217,7 +213,7 @@ sha256(std::span<const std::byte> data)
         return std::unexpected(make_error_code(err));
     }
 
-    const auto *hash = gcry_md_read(hd(), 0);
+    const auto* hash = gcry_md_read(hd(), 0);
     if (!hash) {
         return std::unexpected(make_error_code(GPG_ERR_GENERAL));
     }
@@ -229,12 +225,12 @@ sha256(std::span<const std::byte> data)
 
 } // namespace psafe3
 
-psafe3_err crypto_sha256md(const unsigned char *in, unsigned char *out,
-                           size_t len)
+psafe3_err crypto_sha256md(const unsigned char* in, unsigned char* out,
+    size_t len)
 {
-    gcry_md_hd_t         hd;
-    gcry_error_t         err;
-    const unsigned char *hash;
+    gcry_md_hd_t hd;
+    gcry_error_t err;
+    const unsigned char* hash;
 
     err = gcry_md_open(&hd, GCRY_MD_SHA256, GCRY_MD_FLAG_SECURE);
     if (err != GPG_ERR_NO_ERROR) {

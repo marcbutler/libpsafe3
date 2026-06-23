@@ -10,20 +10,19 @@
 #include "error.h"
 #include "mapped_memory.h"
 
-namespace psafe3
-{
+namespace psafe3 {
 
-class Safe
-{
-  public:
+class Safe {
+public:
     static std::expected<Safe, std::error_code>
-    load(const std::filesystem::path &path,
-         const std::vector<std::byte> pass_phrase);
+    load(const std::filesystem::path& path,
+        const std::vector<std::byte> pass_phrase);
 
-  private:
+private:
     MappedMemory ondisk_;
 
-    Safe(MappedMemory &&ondisk) : ondisk_(std::move(ondisk))
+    Safe(MappedMemory&& ondisk)
+        : ondisk_(std::move(ondisk))
     {
     }
 };
@@ -31,8 +30,8 @@ class Safe
 
 struct safe {
     uintptr_t file_image;
-    size_t    file_size;
-    char      path[];
+    size_t file_size;
+    char path[];
 };
 
 enum safe_prologue_off {
@@ -48,10 +47,10 @@ enum safe_prologue_off {
     SAFE_PROLOGUE_SIZE = SAFE_OFF_IV + PSAFE3_SIZE_B
 };
 
-unsigned char const *safe_salt(struct safe *);
-uint32_t             safe_iter(struct safe *);
-unsigned char const *safe_pass_hash(struct safe *);
-unsigned char const *safe_b(struct safe *, unsigned);
-unsigned char const *safe_iv(struct safe *);
+unsigned char const* safe_salt(struct safe*);
+uint32_t safe_iter(struct safe*);
+unsigned char const* safe_pass_hash(struct safe*);
+unsigned char const* safe_b(struct safe*, unsigned);
+unsigned char const* safe_iv(struct safe*);
 
-psafe3_err safe_load_prologue(int fd, unsigned char *prologue);
+psafe3_err safe_load_prologue(int fd, unsigned char* prologue);

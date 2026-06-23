@@ -6,26 +6,26 @@
 #include "pws3.h"
 #include "util.h"
 
-int psafe3_parse_header(void *ptr, size_t size, struct pws3_header *hdr)
+int psafe3_parse_header(void* ptr, size_t size, struct pws3_header* hdr)
 {
-    static const char MAGIC[] = {'P', 'W', 'S', '3'};
+    static const char MAGIC[] = { 'P', 'W', 'S', '3' };
 
-    unsigned char *bytep = (unsigned char *)ptr;
-    unsigned char *endp = (unsigned char *)ptr + size;
+    unsigned char* bytep = (unsigned char*)ptr;
+    unsigned char* endp = (unsigned char*)ptr + size;
 
     if (memcmp(bytep, MAGIC, sizeof(MAGIC)) != 0) {
         goto exit_err;
     }
     bytep += sizeof(MAGIC);
 
-#define READ_FIELD(fld)                                                        \
-    do {                                                                       \
-        size_t fldsz = sizeof(hdr->fld);                                       \
-        if ((bytep + fldsz) > endp) {                                          \
-            goto exit_err;                                                     \
-        }                                                                      \
-        memcpy(&hdr->fld, bytep, fldsz);                                       \
-        bytep += fldsz;                                                        \
+#define READ_FIELD(fld)                  \
+    do {                                 \
+        size_t fldsz = sizeof(hdr->fld); \
+        if ((bytep + fldsz) > endp) {    \
+            goto exit_err;               \
+        }                                \
+        memcpy(&hdr->fld, bytep, fldsz); \
+        bytep += fldsz;                  \
     } while (0)
 
     READ_FIELD(salt);

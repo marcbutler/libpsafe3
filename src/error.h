@@ -6,18 +6,17 @@
 
 #include <gpg-error.h>
 
-namespace psafe3
-{
+namespace psafe3 {
 
 struct GpgErrorCategory : std::error_category {
-    const char *name() const noexcept override { return "gpg-error"; }
+    const char* name() const noexcept override { return "gpg-error"; }
     std::string message(int ev) const override
     {
         return gpg_strerror(static_cast<gpg_error_t>(ev));
     }
 };
 
-inline const std::error_category &gpg_error_category()
+inline const std::error_category& gpg_error_category()
 {
     static GpgErrorCategory cat;
     return cat;
@@ -25,9 +24,8 @@ inline const std::error_category &gpg_error_category()
 
 inline std::error_code make_error_code(gpg_error_t e)
 {
-    return {static_cast<int>(e), gpg_error_category()};
+    return { static_cast<int>(e), gpg_error_category() };
 }
-
 
 enum class Error : int {
     invalid_magic = 1,
@@ -36,7 +34,7 @@ enum class Error : int {
 };
 
 struct ErrorCategory : std::error_category {
-    const char *name() const noexcept override
+    const char* name() const noexcept override
     {
         return "psafe3";
     }
@@ -55,7 +53,7 @@ struct ErrorCategory : std::error_category {
     }
 };
 
-inline const std::error_category &error_category()
+inline const std::error_category& error_category()
 {
     static psafe3::ErrorCategory cat;
     return cat;
@@ -63,10 +61,11 @@ inline const std::error_category &error_category()
 
 inline std::error_code make_error_code(psafe3::Error e)
 {
-    return {static_cast<int>(e), psafe3::error_category()};
+    return { static_cast<int>(e), psafe3::error_category() };
 }
 
 } // namespace psafe3
 
-template <> struct std::is_error_code_enum<psafe3::Error> : std::true_type {
+template <>
+struct std::is_error_code_enum<psafe3::Error> : std::true_type {
 };

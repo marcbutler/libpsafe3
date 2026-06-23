@@ -19,7 +19,7 @@ static void gcrypt_fatal(gcry_error_t err)
     exit(EXIT_FAILURE);
 }
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
     int ret;
     char pass[100];
@@ -51,17 +51,17 @@ int main(int argc, char **argv)
                    << widen(mapping.error().message().c_str()) << L'\n';
         exit(EXIT_FAILURE);
     }
-    const unsigned char *ptr = (const unsigned char *)mapping->base();
-    size_t               sz  = mapping->size();
+    const unsigned char* ptr = (const unsigned char*)mapping->base();
+    size_t sz = mapping->size();
 
     struct pws3_header hdr;
-    if (psafe3_parse_header((void *)ptr, sz, &hdr) != 0) {
+    if (psafe3_parse_header((void*)ptr, sz, &hdr) != 0) {
         std::wcerr << L"Error reading psafe3 header.";
         exit(EXIT_FAILURE);
     }
 
-    struct safe_sec *sec;
-    sec = (struct safe_sec *)gcry_malloc_secure(sizeof(*sec));
+    struct safe_sec* sec;
+    sec = (struct safe_sec*)gcry_malloc_secure(sizeof(*sec));
     if (sec == NULL) {
         std::wcout << L"Failed to allocate secure memory.\n";
         exit(EXIT_FAILURE);
@@ -74,12 +74,12 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    uint8_t *safe;
+    uint8_t* safe;
     size_t safe_size;
     safe_size = sz - (4 + sizeof(hdr) + 48);
     assert(safe_size > 0);
     assert(safe_size % TWOFISH_SIZE == 0);
-    safe = (uint8_t *)gcry_malloc_secure(safe_size);
+    safe = (uint8_t*)gcry_malloc_secure(safe_size);
     if (safe == NULL) {
         std::wcout << L"Failed to allocate secure memory.\n";
         exit(EXIT_FAILURE);
@@ -94,14 +94,14 @@ int main(int argc, char **argv)
     size_t bcnt;
     bcnt = safe_size / TWOFISH_SIZE;
     assert(bcnt > 0);
-    const uint8_t *encp;
-    uint8_t       *safep;
+    const uint8_t* encp;
+    uint8_t* safep;
     encp = ptr + 4 + sizeof(hdr);
     safep = safe;
-    uint8_t *safe_end = safep + safe_size;
+    uint8_t* safe_end = safep + safe_size;
     while (bcnt && (safep < safe_end)) {
         gerr = gcry_cipher_decrypt(ctx.cipher, safep, TWOFISH_SIZE, encp,
-                                   TWOFISH_SIZE);
+            TWOFISH_SIZE);
         if (gerr != GPG_ERR_NO_ERROR) {
             gcrypt_fatal(gerr);
         }
@@ -111,15 +111,16 @@ int main(int argc, char **argv)
     }
     assert(bcnt == 0);
 
-    enum { HDR, DB };
+    enum { HDR,
+        DB };
     int state = HDR;
     safep = safe;
     while (safep < safe + safe_size) {
-        struct field *fld;
-        fld = (struct field *)safep;
+        struct field* fld;
+        fld = (struct field*)safep;
         {
             auto flags = std::wcout.flags();
-            auto fill  = std::wcout.fill(L'0');
+            auto fill = std::wcout.fill(L'0');
             std::wcout << L"type=" << std::hex << std::setw(2)
                        << static_cast<unsigned>(fld->type);
             std::wcout.flags(flags);

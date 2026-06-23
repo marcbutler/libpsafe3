@@ -23,11 +23,11 @@
 
 struct pws3_header {
     // Starts with the fixed tag "PWS3".
-    uint8_t  salt[32];
+    uint8_t salt[32];
     uint32_t iter;
-    uint8_t  h_pprime[32];
-    uint8_t  b[4][16];
-    uint8_t  iv[16];
+    uint8_t h_pprime[32];
+    uint8_t b[4][16];
+    uint8_t iv[16];
 };
 
-int psafe3_parse_header(void *ptr, size_t size, struct pws3_header *hdr);
+int psafe3_parse_header(void* ptr, size_t size, struct pws3_header* hdr);

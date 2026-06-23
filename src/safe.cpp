@@ -1,7 +1,6 @@
 // https://github.com/marcbutler/libpsafe3/LICENSE
 
 #include <array>
-#include <cmath>
 #include <expected>
 #include <sys/types.h>
 #include <system_error>
@@ -33,8 +32,7 @@
 //   4  1 TYPE
 //   5  * FIELD DATA
 
-namespace
-{
+namespace {
 enum PROLOGUE : unsigned int {
     MAGIC_OFFSET = 0,
     MAGIC_SIZE = 4,
@@ -55,25 +53,37 @@ enum PROLOGUE : unsigned int {
 };
 
 static const std::array<std::byte, MAGIC_SIZE> MAGIC = {
-    std::byte{'P'},
-    std::byte{'W'},
-    std::byte{'S'},
-    std::byte{'3'},
+    std::byte { 'P' },
+    std::byte { 'W' },
+    std::byte { 'S' },
+    std::byte { '3' },
 };
 
 static const std::array<std::byte, 16> DBEND = {
-    std::byte{'P'}, std::byte{'W'}, std::byte{'S'}, std::byte{'3'},
-    std::byte{'-'}, std::byte{'E'}, std::byte{'O'}, std::byte{'F'},
-    std::byte{'P'}, std::byte{'W'}, std::byte{'S'}, std::byte{'3'},
-    std::byte{'-'}, std::byte{'E'}, std::byte{'O'}, std::byte{'F'},
+    std::byte { 'P' },
+    std::byte { 'W' },
+    std::byte { 'S' },
+    std::byte { '3' },
+    std::byte { '-' },
+    std::byte { 'E' },
+    std::byte { 'O' },
+    std::byte { 'F' },
+    std::byte { 'P' },
+    std::byte { 'W' },
+    std::byte { 'S' },
+    std::byte { '3' },
+    std::byte { '-' },
+    std::byte { 'E' },
+    std::byte { 'O' },
+    std::byte { 'F' },
 };
 
 } // namespace
 
-psafe3_err safe_load_prologue(int fd, unsigned char *prologue)
+psafe3_err safe_load_prologue(int fd, unsigned char* prologue)
 {
     off_t ret;
-    ssize_t  nread;
+    ssize_t nread;
 
     assert_fd(fd);
     assert_ptr(prologue);
@@ -98,24 +108,24 @@ psafe3_err safe_load_prologue(int fd, unsigned char *prologue)
     return GPG_ERR_NO_ERROR;
 }
 
-unsigned char const *safe_salt(struct safe *s)
+unsigned char const* safe_salt(struct safe* s)
 {
-    return (unsigned char const *)s->file_image + SALT_OFFSET;
+    return (unsigned char const*)s->file_image + SALT_OFFSET;
 }
 
-uint32_t safe_iter(struct safe *s)
+uint32_t safe_iter(struct safe* s)
 {
-    unsigned char const *b = (unsigned char const *)s->file_image + ITER_OFFSET;
+    unsigned char const* b = (unsigned char const*)s->file_image + ITER_OFFSET;
     uint32_t count = b[0] + (b[1] << 8) + (b[2] << 16) + (b[3] << 24);
     return count;
 }
 
-unsigned char const *safe_pass_hash(struct safe *s)
+unsigned char const* safe_pass_hash(struct safe* s)
 {
-    return (unsigned char const *)s->file_image + PASS_HASH_OFFSET;
+    return (unsigned char const*)s->file_image + PASS_HASH_OFFSET;
 }
 
-unsigned char const *safe_b(struct safe *s, unsigned i)
+unsigned char const* safe_b(struct safe* s, unsigned i)
 {
     assert(i < 4);
     static const size_t OFFSET_sets[4] = {
@@ -124,25 +134,24 @@ unsigned char const *safe_b(struct safe *s, unsigned i)
         OFFSET_B3,
         OFFSET_B4,
     };
-    return (unsigned char const *)s->file_image + OFFSET_sets[i];
+    return (unsigned char const*)s->file_image + OFFSET_sets[i];
 }
 
-unsigned char const *safe_iv(struct safe *s)
+unsigned char const* safe_iv(struct safe* s)
 {
-    return (unsigned char const *)s->file_image + OFFSET_IV;
+    return (unsigned char const*)s->file_image + OFFSET_IV;
 }
 
-namespace psafe3
-{
+namespace psafe3 {
 std::expected<Safe, std::error_code>
-Safe::load(const std::filesystem::path &path,
-           const std::vector<std::byte> pass_phrase)
+Safe::load(const std::filesystem::path& path,
+    const std::vector<std::byte> pass_phrase)
 {
     auto mapped_file = MappedFile::open(path.c_str());
     if (!mapped_file) {
         return std::unexpected(mapped_file.error());
     }
-    auto &contents = mapped_file.value();
+    auto& contents = mapped_file.value();
     // TODO Check if file size is < minimum viable safe size.
     if (MAGIC != contents.slice<MAGIC.size()>(PROLOGUE::MAGIC_OFFSET)) {
         return std::unexpected(psafe3::Error::invalid_magic);
@@ -159,8 +168,7 @@ Safe::load(const std::filesystem::path &path,
         return std::unexpected(key_hash_calc.error());
     }
     auto key_hash = key_hash_calc.value();
-    if (key_hash != contents.slice<PROLOGUE::PASS_HASH_SIZE>(PROLOGUE::PASS_HASH_OFFSET))
-    {
+    if (key_hash != contents.slice<PROLOGUE::PASS_HASH_SIZE>(PROLOGUE::PASS_HASH_OFFSET)) {
         return std::unexpected(psafe3::Error::invalid_password);
     }
 

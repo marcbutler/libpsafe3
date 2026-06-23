@@ -8,25 +8,25 @@
 
 #include "util.h"
 
-void crash_actual(const char *path, const char *func)
+void crash_actual(const char* path, const char* func)
 {
     std::wcerr << L"CRASH " << widen(path) << L":" << widen(func) << L'\n';
 #ifdef NDEBUG
     abort();
 #else
 // Prefer clang.
-#    if __clang__
+#if __clang__
     __builtin_debugtrap();
-#    elif __GNUC__
+#elif __GNUC__
     __builtin_trap();
-#    else
+#else
     abort();
-#    endif
+#endif
 #endif
 }
 
 // Wide character version of perror().
-void wperror(const wchar_t *msg)
+void wperror(const wchar_t* msg)
 {
     if (msg == NULL || *msg == 0) {
         std::wcerr << widen(strerror(errno));
@@ -51,7 +51,7 @@ void checked_close(int fd)
 }
 
 // Read a line from the terminal. The newline character is removed.
-int read_from_terminal(const char *prompt, char *buf, size_t *bufsize)
+int read_from_terminal(const char* prompt, char* buf, size_t* bufsize)
 {
     assert(prompt && buf && bufsize);
     struct termios t;

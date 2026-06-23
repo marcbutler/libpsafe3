@@ -20,25 +20,24 @@
 psafe3_err crypto_init();
 psafe3_err crypto_term();
 
-psafe3_err crypto_stretch_key(const unsigned char *pass, size_t passlen,
-                              const sha256_hash salt, long iterations,
-                              sha256_hash stretched_key);
+psafe3_err crypto_stretch_key(const unsigned char* pass, size_t passlen,
+    const sha256_hash salt, long iterations,
+    sha256_hash stretched_key);
 
-psafe3_err crypto_sha256md(const unsigned char *in, unsigned char *out,
-                           size_t len);
+psafe3_err crypto_sha256md(const unsigned char* in, unsigned char* out,
+    size_t len);
 
-void *crypto_secure_malloc(size_t size);
-void  crypto_secure_free(void *ptr);
+void* crypto_secure_malloc(size_t size);
+void crypto_secure_free(void* ptr);
 
-namespace psafe3
-{
+namespace psafe3 {
 
 static constexpr size_t SHA256_SIZE = 32;
 
 std::expected<SecureBytes, std::error_code>
-stretch_key(std::span<const std::byte>             pass,
-            std::span<const std::byte, SHA256_SIZE> salt,
-            uint32_t                                iterations);
+stretch_key(std::span<const std::byte> pass,
+    std::span<const std::byte, SHA256_SIZE> salt,
+    uint32_t iterations);
 
 std::expected<std::array<std::byte, SHA256_SIZE>, std::error_code>
 sha256(std::span<const std::byte> data);

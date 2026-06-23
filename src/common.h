@@ -19,4 +19,3 @@ typedef unsigned char sha256_hash[SHA256_BYTES];
 // TWOFISH block size in bytes.
 #define TWOFISH_BYTES 16
 typedef unsigned char twofish_block[TWOFISH_BYTES];
-

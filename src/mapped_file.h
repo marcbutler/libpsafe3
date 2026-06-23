@@ -12,18 +12,18 @@
 
 class MappedFile {
 public:
-    static std::expected<MappedFile, std::error_code> open(const char *path);
+    static std::expected<MappedFile, std::error_code> open(const char* path);
 
     ~MappedFile();
-    MappedFile(MappedFile &&) noexcept;
-    MappedFile &operator=(MappedFile &&) noexcept;
-    MappedFile(const MappedFile &)            = delete;
-    MappedFile &operator=(const MappedFile &) = delete;
+    MappedFile(MappedFile&&) noexcept;
+    MappedFile& operator=(MappedFile&&) noexcept;
+    MappedFile(const MappedFile&) = delete;
+    MappedFile& operator=(const MappedFile&) = delete;
 
-    void               close();
+    void close();
     MappedMemory detach() noexcept;
-    uintptr_t          base() const noexcept;
-    size_t             size() const noexcept;
+    uintptr_t base() const noexcept;
+    size_t size() const noexcept;
     std::span<const std::byte> slice(size_t offset, size_t length) const noexcept;
 
     template <size_t N>
@@ -31,11 +31,11 @@ public:
     {
         assert(offset + N <= size_);
         return std::span<const std::byte, N>(
-            reinterpret_cast<const std::byte *>(base_) + offset, N);
+            reinterpret_cast<const std::byte*>(base_) + offset, N);
     }
 
 private:
     MappedFile(uintptr_t base, size_t size) noexcept;
     uintptr_t base_;
-    size_t    size_;
+    size_t size_;
 };

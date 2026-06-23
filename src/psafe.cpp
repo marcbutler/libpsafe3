@@ -25,11 +25,11 @@ static void gcrypt_fatal(gcry_error_t err)
 // Perform hash based stretching on the provided password.
 //
 // http://www.schneier.com/paper-low-entropy.pdf
-INTERNAL gcry_error_t stretch_key(const char *pass, size_t passlen,
-                                  const struct pws3_header *pro, uint8_t *skey)
+INTERNAL gcry_error_t stretch_key(const char* pass, size_t passlen,
+    const struct pws3_header* pro, uint8_t* skey)
 {
-    gcry_error_t  err;
-    gcry_md_hd_t  sha256;
+    gcry_error_t err;
+    gcry_md_hd_t sha256;
     unsigned char tmp[SHA256_SIZE];
 
     err = gcry_md_open(&sha256, GCRY_MD_SHA256, GCRY_MD_FLAG_SECURE);
@@ -55,11 +55,11 @@ INTERNAL gcry_error_t stretch_key(const char *pass, size_t passlen,
 }
 
 // Compute the SHA256 message digest of the input buffer.
-INTERNAL gcry_error_t sha256_md(const uint8_t *in, uint8_t *out, size_t len)
+INTERNAL gcry_error_t sha256_md(const uint8_t* in, uint8_t* out, size_t len)
 {
-    gcry_md_hd_t   hd;
-    gcry_error_t   err;
-    const uint8_t *hash;
+    gcry_md_hd_t hd;
+    gcry_error_t err;
+    const uint8_t* hash;
 
     err = gcry_md_open(&hd, GCRY_MD_SHA256, GCRY_MD_FLAG_SECURE);
     if (err != GPG_ERR_NO_ERROR) {
@@ -83,15 +83,15 @@ exit_with_error:
 }
 
 // Decrypt the random key using the stretch key.
-INTERNAL gcry_error_t extract_random_key(const uint8_t *stretchkey,
-                                         const uint8_t *fst, const uint8_t *snd,
-                                         uint8_t *randkey)
+INTERNAL gcry_error_t extract_random_key(const uint8_t* stretchkey,
+    const uint8_t* fst, const uint8_t* snd,
+    uint8_t* randkey)
 {
-    gcry_error_t     err;
+    gcry_error_t err;
     gcry_cipher_hd_t hd;
 
     err = gcry_cipher_open(&hd, GCRY_CIPHER_TWOFISH, GCRY_CIPHER_MODE_ECB,
-                           GCRY_CIPHER_SECURE);
+        GCRY_CIPHER_SECURE);
     if (err != GPG_ERR_NO_ERROR) {
         return err;
     }
@@ -102,31 +102,31 @@ INTERNAL gcry_error_t extract_random_key(const uint8_t *stretchkey,
     gcry_cipher_decrypt(hd, randkey, TWOFISH_SIZE, fst, TWOFISH_SIZE);
     gcry_cipher_reset(hd);
     gcry_cipher_decrypt(hd, randkey + TWOFISH_SIZE, TWOFISH_SIZE, snd,
-                        TWOFISH_SIZE);
+        TWOFISH_SIZE);
     gcry_cipher_close(hd);
     return GPG_ERR_NO_ERROR;
 }
 
-static void print_time(std::wostream &out, uint8_t *val)
+static void print_time(std::wostream& out, uint8_t* val)
 {
-    struct tm *lt;
-    time_t     time;
+    struct tm* lt;
+    time_t time;
     time = le32_deserialize(val);
-    lt   = gmtime(&time);
+    lt = gmtime(&time);
     auto fill = out.fill(L'0');
     out << std::dec
         << (1900 + lt->tm_year) << L'-' << lt->tm_mon << L'-' << lt->tm_mday
         << L' '
         << std::setw(2) << lt->tm_hour << L':'
-        << std::setw(2) << lt->tm_min  << L':'
+        << std::setw(2) << lt->tm_min << L':'
         << std::setw(2) << lt->tm_sec;
     out.fill(fill);
 }
 
-void dump_bytes(std::wostream &out, const uint8_t *ptr, unsigned cnt)
+void dump_bytes(std::wostream& out, const uint8_t* ptr, unsigned cnt)
 {
     auto flags = out.flags();
-    auto fill  = out.fill(L'0');
+    auto fill = out.fill(L'0');
     out << std::hex;
     for (unsigned i = 0; i < cnt; i++) {
         out << std::setw(2) << static_cast<unsigned>(*ptr++);
@@ -135,7 +135,7 @@ void dump_bytes(std::wostream &out, const uint8_t *ptr, unsigned cnt)
     out.fill(fill);
 }
 
-static void print_uuid(std::wostream &out, uint8_t *uuid)
+static void print_uuid(std::wostream& out, uint8_t* uuid)
 {
     dump_bytes(out, uuid, 4);
     out << L'-';
@@ -148,19 +148,19 @@ static void print_uuid(std::wostream &out, uint8_t *uuid)
     dump_bytes(out, uuid + 10, 6);
 }
 
-static void pws(std::wostream &out, uint8_t *bp, size_t len)
+static void pws(std::wostream& out, uint8_t* bp, size_t len)
 {
     mbstate_t state;
     memset(&state, 0, sizeof(state));
-    wchar_t    *tmp = (wchar_t *)malloc((len + 1) * sizeof(wchar_t));
-    const char *ptr = (const char *)bp;
-    size_t      n   = mbsrtowcs(tmp, &ptr, len, &state);
+    wchar_t* tmp = (wchar_t*)malloc((len + 1) * sizeof(wchar_t));
+    const char* ptr = (const char*)bp;
+    size_t n = mbsrtowcs(tmp, &ptr, len, &state);
     tmp[n] = L'\0';
     out << tmp;
     free(tmp);
 }
 
-void dump_hdr_field(std::wostream &out, struct field *fld)
+void dump_hdr_field(std::wostream& out, struct field* fld)
 {
     switch (fld->type) {
     case 0x2 ... 0x3:
@@ -177,7 +177,7 @@ void dump_hdr_field(std::wostream &out, struct field *fld)
     }
 }
 
-void dump_db_field(std::wostream &out, struct field *fld)
+void dump_db_field(std::wostream& out, struct field* fld)
 {
     switch (fld->type) {
     case 0x2 ... 0x6:
@@ -196,8 +196,8 @@ void dump_db_field(std::wostream &out, struct field *fld)
     }
 }
 
-int init_decrypt_ctx(struct crypto_ctx *ctx, struct pws3_header *pro,
-                     struct safe_sec *sec)
+int init_decrypt_ctx(struct crypto_ctx* ctx, struct pws3_header* pro,
+    struct safe_sec* sec)
 {
 
     assert_ptr(ctx);
@@ -206,7 +206,7 @@ int init_decrypt_ctx(struct crypto_ctx *ctx, struct pws3_header *pro,
 
     gcry_error_t gerr;
     gerr = gcry_cipher_open(&ctx->cipher, GCRY_CIPHER_TWOFISH,
-                            GCRY_CIPHER_MODE_CBC, GCRY_CIPHER_SECURE);
+        GCRY_CIPHER_MODE_CBC, GCRY_CIPHER_SECURE);
     if (gerr != GPG_ERR_NO_ERROR) {
         goto err_cipher;
     }
@@ -222,7 +222,7 @@ int init_decrypt_ctx(struct crypto_ctx *ctx, struct pws3_header *pro,
     }
 
     gerr = gcry_md_open(&ctx->hmac, GCRY_MD_SHA256,
-                        GCRY_MD_FLAG_SECURE | GCRY_MD_FLAG_HMAC);
+        GCRY_MD_FLAG_SECURE | GCRY_MD_FLAG_HMAC);
     if (gerr != GPG_ERR_NO_ERROR) {
         goto err_hmac;
     }
@@ -241,13 +241,13 @@ err_cipher:
     return -1;
 }
 
-void term_decrypt_ctx(struct crypto_ctx *ctx)
+void term_decrypt_ctx(struct crypto_ctx* ctx)
 {
     gcry_cipher_close(ctx->cipher);
     gcry_md_close(ctx->hmac);
 }
 
-void dump_prologue(std::wostream &out, struct pws3_header *pro)
+void dump_prologue(std::wostream& out, struct pws3_header* pro)
 {
     out << L"SALT   ";
     dump_bytes(out, pro->salt, 32);
@@ -266,12 +266,12 @@ void dump_prologue(std::wostream &out, struct pws3_header *pro)
     out << L'\n';
 }
 
-gcry_error_t stretch_and_check_pass(const char *pass, size_t passlen,
-                                    struct pws3_header *pro,
-                                    struct safe_sec    *sec)
+gcry_error_t stretch_and_check_pass(const char* pass, size_t passlen,
+    struct pws3_header* pro,
+    struct safe_sec* sec)
 {
     gcry_error_t err;
-    uint8_t      hkey[SHA256_SIZE];
+    uint8_t hkey[SHA256_SIZE];
 
     err = stretch_key(pass, passlen, pro, sec->pprime);
     if (err != GPG_ERR_NO_ERROR) {
