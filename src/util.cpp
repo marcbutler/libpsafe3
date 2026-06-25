@@ -1,7 +1,8 @@
 // https://github.com/marcbutler/libpsafe3/LICENSE
 
 #include <cassert>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 #include <termios.h>
 #include <unistd.h>
 
