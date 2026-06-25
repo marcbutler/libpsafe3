@@ -1,5 +1,7 @@
 // https://github.com/marcbutler/libpsafe3/LICENSE
 
+#include <cstring>
+
 #include "crypto.h"
 #include "gcrypt.h"
 #include "handle.h"
