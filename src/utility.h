@@ -1,10 +1,11 @@
 #pragma once
-// TODO License
+// https://github.com/marcbutler/libpsafe3/LICENSE
 
 #include <array>
 #include <bit>
 #include <cassert>
 #include <concepts>
+#include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <numeric>
@@ -96,4 +97,8 @@ inline bool operator!=(std::span<const T, N> a,
 {
     return !(b == a);
 }
+static constexpr size_t TWOFISH_SIZE = 16;
+
 } // namespace psafe3
+
+int read_from_terminal(const char* prompt, char* buf, size_t* bufsize);

@@ -7,7 +7,8 @@
 #include <system_error>
 #include <vector>
 
-#include "common.h"
+#include <cstdint>
+
 #include "mapped_memory.h"
 #include "secure_bytes.h"
 

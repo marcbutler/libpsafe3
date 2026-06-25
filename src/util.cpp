@@ -1,31 +1,12 @@
 // https://github.com/marcbutler/libpsafe3/LICENSE
 
-#include <errno.h>
-#include <iostream>
+#include <cassert>
 #include <string.h>
 #include <termios.h>
 #include <unistd.h>
 
-#include "util.h"
+#include "utility.h"
 
-void crash_actual(const char* path, const char* func)
-{
-    std::wcerr << L"CRASH " << widen(path) << L":" << widen(func) << L'\n';
-#ifdef NDEBUG
-    abort();
-#else
-// Prefer clang.
-#if __clang__
-    __builtin_debugtrap();
-#elif __GNUC__
-    __builtin_trap();
-#else
-    abort();
-#endif
-#endif
-}
-
-// Read a line from the terminal. The newline character is removed.
 int read_from_terminal(const char* prompt, char* buf, size_t* bufsize)
 {
     assert(prompt && buf && bufsize);

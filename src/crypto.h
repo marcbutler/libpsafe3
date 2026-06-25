@@ -9,7 +9,6 @@
 
 #include <gcrypt.h>
 
-#include "common.h"
 #include "error.h"
 #include "secure_bytes.h"
 

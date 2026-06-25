@@ -1,7 +1,3 @@
-add_executable(test_util test_util.cpp)
-target_link_libraries(test_util PRIVATE psafe3_static)
-add_test(NAME util COMMAND test_util)
-
 add_executable(test_utility test_utility.cpp)
 target_link_libraries(test_utility PRIVATE psafe3_static)
 add_test(NAME utility COMMAND test_utility)

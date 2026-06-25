@@ -3,10 +3,8 @@
 #include <array>
 #include <expected>
 #include <span>
-#include <sys/types.h>
 #include <system_error>
 
-#include "common.h"
 #include "crypto.h"
 #include "error.h"
 #include "gcrypt.h"
@@ -14,7 +12,6 @@
 #include "mapped_file.h"
 #include "safe.h"
 #include "secure_bytes.h"
-#include "util.h"
 #include "utility.h"
 
 // File format.
@@ -119,7 +116,6 @@ Safe::load(const std::filesystem::path& path,
         return std::unexpected(mapped_file.error());
     }
     auto& contents = mapped_file.value();
-    // TODO Check if file size is < minimum viable safe size.
     if (MAGIC != contents.slice<MAGIC.size()>(PROLOGUE::MAGIC_OFFSET)) {
         return std::unexpected(psafe3::Error::invalid_magic);
     }
@@ -177,10 +173,8 @@ Safe::load(const std::filesystem::path& path,
     while (offset < encrypted.size()) {
         err = gcry_cipher_decrypt(cipher(), decrypted.data(offset), TWOFISH_SIZE,
             encrypted.subspan(offset, TWOFISH_SIZE).data(), TWOFISH_SIZE);
-        // TODO Check for end of header field.
         offset += TWOFISH_SIZE;
     }
-    // TODO Decrypted database.
 
     size_t epilogue_offset = PROLOGUE_SIZE + encrypted.size();
     if (contents.slice<TWOFISH_SIZE>(epilogue_offset) != DBEND) {

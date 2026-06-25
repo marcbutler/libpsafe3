@@ -11,7 +11,7 @@
 
 #include "mapped_file.h"
 #include "mapped_memory.h"
-#include "util.h"
+
 
 MappedFile::MappedFile(uintptr_t base, size_t size) noexcept
     : base_(base)
@@ -42,8 +42,6 @@ MappedFile::~MappedFile()
     } catch (const std::system_error& e) {
 #ifdef NDEBUG
         syslog(LOG_ERR, "munmap failed: %s", e.what());
-#else
-        crash();
 #endif
     }
 }

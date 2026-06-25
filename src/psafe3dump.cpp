@@ -6,7 +6,7 @@
 
 #include "safe.h"
 #include "safeio.h"
-#include "util.h"
+#include "utility.h"
 
 int main(int argc, char** argv)
 {

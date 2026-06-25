@@ -1,26 +1,12 @@
 // https://github.com/marcbutler/libpsafe3/LICENSE
 
-#include <memory>
-
-#include "common.h"
 #include "crypto.h"
 #include "gcrypt.h"
 #include "handle.h"
-#include "util.h"
 
 namespace psafe3 {
 
 namespace {
-
-    struct MdHandle {
-        gcry_md_hd_t hd = nullptr;
-        ~MdHandle()
-        {
-            if (hd) {
-                gcry_md_close(hd);
-            }
-        }
-    };
 
     std::error_code do_init()
     {
@@ -42,6 +28,10 @@ namespace {
             return make_error_code(err);
         }
         err = gcry_control(GCRYCTL_RESUME_SECMEM_WARN);
+        if (err) {
+            return make_error_code(err);
+        }
+        err = gcry_control(GCRYCTL_INITIALIZATION_FINISHED, 0);
         if (err) {
             return make_error_code(err);
         }
