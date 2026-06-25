@@ -1,10 +1,7 @@
 #pragma once
 // https://github.com/marcbutler/libpsafe3/LICENSE
 
-#include <errno.h>
-#include <stdint.h>
 #include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
 
 #include <gcrypt.h>

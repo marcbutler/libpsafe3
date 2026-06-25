@@ -4,6 +4,7 @@
 #include <array>
 #include <bit>
 #include <cassert>
+#include <concepts>
 #include <cstdint>
 #include <cstring>
 #include <numeric>
@@ -51,7 +52,7 @@ uint_from_t<N> load(std::span<const std::byte, N> mem)
     if (E == std::endian::native && ptr_alignment_is<N>(mem.data())) {
         return *reinterpret_cast<const uint_type*>(mem.data());
     }
-    auto shift_add = [](uint_type a, std::byte b) {
+    auto shift_add = [](const uint_type a, const std::byte b) {
         return (a << 8) | static_cast<uint_type>(b);
     };
     if (E == std::endian::big) {
@@ -62,27 +63,11 @@ uint_from_t<N> load(std::span<const std::byte, N> mem)
         shift_add);
 }
 
-template <typename T, auto F>
-struct Handle {
-    bool holding = false;
-    T actual;
-    void acquire()
-    {
-        holding = true;
-    }
-    void release()
-    {
-        holding = false;
-        actual = T();
-    }
-    T operator()()
-    {
-        return actual;
-    }
-    ~Handle()
-    {
-    }
-};
+template <std::unsigned_integral T>
+constexpr T align_up(T n, T m) noexcept
+{
+    return (n + m - 1) / m * m;
+}
 
 template <typename T, std::size_t N>
 inline bool operator==(const std::array<T, N>& a,

@@ -21,7 +21,7 @@ public:
     MappedFile& operator=(const MappedFile&) = delete;
 
     void close();
-    MappedMemory detach() noexcept;
+    psafe3::MappedMemory detach() noexcept;
     uintptr_t base() const noexcept;
     size_t size() const noexcept;
     std::span<const std::byte> slice(size_t offset, size_t length) const noexcept;

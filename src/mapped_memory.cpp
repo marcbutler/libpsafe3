@@ -5,6 +5,9 @@
 
 #include "mapped_memory.h"
 
+namespace psafe3
+{
+
 MappedMemory::MappedMemory(uintptr_t base, size_t size) noexcept
     : base_(base)
     , size_(size)
@@ -44,3 +47,5 @@ std::span<const std::byte> MappedMemory::span() const noexcept
 {
     return { data(), size_ };
 }
+
+} // namespace psafe3

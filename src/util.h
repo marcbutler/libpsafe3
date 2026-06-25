@@ -10,30 +10,20 @@
 
 #include <utility.h>
 
-#define BYTE unsigned char
-
 // Twofish block size in bytes.
-#define TWOFISH_SIZE 16
+#define TWOFISH_SIZE 16lu
 
 // SHA-256 size in bytes.
-#define SHA256_SIZE 32
+#define SHA256_SIZE 32lu
 
 // Prevent linking to symbol.
 #define INTERNAL __attribute__((visibility("hidden")))
-
-#define KIB(n) ((n) * 1024)
-#define MIB(n) ((n) * 1048576)
-
-#define MIN(a, b) (((a) < (b)) ? (a) : (b))
-#define MAX(a, b) (((a) > (b)) ? (a) : (b))
 
 #define ABS(x) (((x) < 0) ? -(x) : (x))
 
 #define assert_fd(f) assert((f) >= 0)
 
 #define assert_ptr(p) assert((p) != NULL)
-
-#define assert_not(e) assert(!(e))
 
 #define STRIFY(txt) #txt
 
@@ -64,6 +54,4 @@ inline std::wstring widen(const char* s)
 }
 
 void crash_actual(const char* path, const char* func);
-void checked_close(int fd);
 int read_from_terminal(const char* prompt, char* buf, size_t* bufsize);
-void wperror(const wchar_t* msg);

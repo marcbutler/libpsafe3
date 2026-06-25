@@ -101,7 +101,7 @@ static void test_detach()
     uintptr_t orig_base = result.value().base();
     size_t    orig_size = result.value().size();
 
-    MappedMemory region = result.value().detach();
+    psafe3::MappedMemory region = result.value().detach();
 
     // MappedFile is now closed
     assert(result.value().base() == 0);

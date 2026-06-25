@@ -5,6 +5,11 @@
 #include <cstdint>
 #include <span>
 
+class MappedFile;
+
+namespace psafe3
+{
+
 class MappedMemory {
 public:
     ~MappedMemory();
@@ -18,8 +23,10 @@ public:
     std::span<const std::byte> span() const noexcept;
 
 private:
-    friend class MappedFile;
+    friend class ::MappedFile;
     MappedMemory(uintptr_t base, size_t size) noexcept;
     uintptr_t base_;
     size_t size_;
 };
+
+} // namespace psafe3

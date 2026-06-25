@@ -5,6 +5,7 @@
 #include "common.h"
 #include "crypto.h"
 #include "gcrypt.h"
+#include "handle.h"
 #include "util.h"
 
 #define GCRY_FAILED(err) ((err) != GPG_ERR_NO_ERROR)
@@ -28,9 +29,19 @@ gcry_error_t crypto_init()
         return err;
     }
 
+    err = gcry_control(GCRYCTL_INIT_SECMEM, 65536, 0);
+    if (err != GPG_ERR_NO_ERROR) {
+        return err;
+    }
+
     // Allow on the fly expansion of the secure memory area. Minimum increment
     // is 32KiB.
     err = gcry_control(GCRYCTL_AUTO_EXPAND_SECMEM, 1);
+    if (err != GPG_ERR_NO_ERROR) {
+        return err;
+    }
+
+    err = gcry_control(GCRYCTL_INITIALIZATION_FINISHED, 0);
     if (err != GPG_ERR_NO_ERROR) {
         return err;
     }
@@ -218,6 +229,64 @@ sha256(std::span<const std::byte> data)
         return std::unexpected(make_error_code(GPG_ERR_GENERAL));
     }
 
+    std::array<std::byte, SHA256_SIZE> result;
+    std::memcpy(result.data(), hash, SHA256_SIZE);
+    return result;
+}
+
+SHA256HMA::~SHA256HMA()
+{
+    if (hd_)
+        gcry_md_close(hd_);
+}
+
+SHA256HMA::SHA256HMA(SHA256HMA&& o) noexcept
+    : hd_(o.hd_)
+{
+    o.hd_ = nullptr;
+}
+
+SHA256HMA& SHA256HMA::operator=(SHA256HMA&& o) noexcept
+{
+    if (this != &o) {
+        if (hd_)
+            gcry_md_close(hd_);
+        hd_ = o.hd_;
+        o.hd_ = nullptr;
+    }
+    return *this;
+}
+
+std::expected<SHA256HMA, std::error_code> SHA256HMA::create(std::span<const std::byte> key)
+{
+    if (auto err = ensure_init(); err)
+        return std::unexpected(err);
+
+    gcry_md_hd_t hd;
+    gcry_error_t err = gcry_md_open(&hd, GCRY_MD_SHA256,
+        GCRY_MD_FLAG_SECURE | GCRY_MD_FLAG_HMAC);
+    if (err)
+        return std::unexpected(make_error_code(err));
+
+    err = gcry_md_setkey(hd, key.data(), key.size());
+    if (err) {
+        gcry_md_close(hd);
+        return std::unexpected(make_error_code(err));
+    }
+    return SHA256HMA(hd);
+}
+
+void SHA256HMA::write(std::span<const std::byte> data)
+{
+    gcry_md_write(hd_, data.data(), data.size());
+}
+
+std::expected<std::array<std::byte, SHA256_SIZE>, std::error_code> SHA256HMA::finish()
+{
+    gcry_md_final(hd_);
+    const auto* hash = gcry_md_read(hd_, GCRY_MD_SHA256);
+    if (!hash)
+        return std::unexpected(make_error_code(GPG_ERR_GENERAL));
     std::array<std::byte, SHA256_SIZE> result;
     std::memcpy(result.data(), hash, SHA256_SIZE);
     return result;

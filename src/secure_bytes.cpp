@@ -67,14 +67,24 @@ size_t SecureBytes::size() const noexcept
     return size_;
 }
 
-std::span<std::byte> SecureBytes::span() noexcept
+std::span<std::byte> SecureBytes::as_span() noexcept
 {
     return { static_cast<std::byte*>(data_), size_ };
 }
 
-std::span<const std::byte> SecureBytes::span() const noexcept
+std::span<const std::byte> SecureBytes::as_span() const noexcept
 {
     return { static_cast<const std::byte*>(data_), size_ };
+}
+
+std::span<std::byte> SecureBytes::span(size_t offset, size_t len) noexcept
+{
+    return { static_cast<std::byte*>(data_) + offset, len };
+}
+
+std::span<const std::byte> SecureBytes::span(size_t offset, size_t len) const noexcept
+{
+    return { static_cast<const std::byte*>(data_) + offset, len };
 }
 
 } // namespace psafe3

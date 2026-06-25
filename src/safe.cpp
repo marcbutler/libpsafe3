@@ -2,7 +2,6 @@
 
 #include <array>
 #include <expected>
-#include <ios>
 #include <span>
 #include <sys/types.h>
 #include <system_error>
@@ -11,6 +10,7 @@
 #include "crypto.h"
 #include "error.h"
 #include "gcrypt.h"
+#include "handle.h"
 #include "mapped_file.h"
 #include "safe.h"
 #include "secure_bytes.h"
@@ -193,7 +193,7 @@ Safe::load(const std::filesystem::path& path,
         return std::unexpected(stretch_result.error());
     }
     SecureBytes key = std::move(stretch_result.value());
-    auto key_hash_calc = psafe3::sha256(key.span());
+    auto key_hash_calc = psafe3::sha256(key.as_span());
     if (!key_hash_calc) [[unlikely]] {
         return std::unexpected(key_hash_calc.error());
     }
@@ -230,40 +230,62 @@ Safe::load(const std::filesystem::path& path,
     }
     auto key_l = std::move(key_l_tmp.value());
 
-    psafe3::Handle<gcry_md_hd_t, gcry_md_close> hmac;
-    err = gcry_md_open(&hmac.actual, GCRY_MD_SHA256,
-        GCRY_MD_FLAG_SECURE | GCRY_MD_FLAG_HMAC);
-    if (err) {
-        return std::unexpected(make_error_code(err));
-    }
-    err = gcry_md_setkey(hmac(), key_l.data(), SHA256_SIZE);
-    if (err) {
-        return std::unexpected(make_error_code(err));
-    }
-
     auto encrypted = contents.slice(PROLOGUE_SIZE, contents.size() - (PROLOGUE_SIZE + TWOFISH_SIZE + SHA256_SIZE));
     assert(encrypted.size() > 0 && (encrypted.size() % TWOFISH_SIZE == 0));
     SecureBytes decrypted(encrypted.size());
 
     size_t offset = 0;
+    // Decrypted header fields.
     while (offset < encrypted.size()) {
         err = gcry_cipher_decrypt(cipher(), decrypted.data(offset), TWOFISH_SIZE,
             encrypted.subspan(offset, TWOFISH_SIZE).data(), TWOFISH_SIZE);
-
+        // TODO Check for end of header field.
         offset += TWOFISH_SIZE;
     }
+    // TODO Decrypted database.
 
     size_t epilogue_offset = PROLOGUE_SIZE + encrypted.size();
     if (contents.slice<TWOFISH_SIZE>(epilogue_offset) != DBEND) {
         return std::unexpected(psafe3::Error::corrupt_file);
     }
 
-    // gcry_md_final(hmac());
-    // std::array<std::byte, SHA256_SIZE> computed_hmac;
-    // memmove(&computed_hmac[0], gcry_md_read(hmac(), GCRY_MD_SHA256), SHA256_SIZE);
-    // if (computed_hmac != contents.slice<SHA256_SIZE>(epilogue_offset + TWOFISH_BYTES)) {
-    //     return std::unexpected(psafe3::Error::hmac_mismatch);
-    // }
+    auto hmac_result = psafe3::SHA256HMA::create(key_l.as_span());
+    if (!hmac_result)
+        return std::unexpected(hmac_result.error());
+    auto hmac = std::move(hmac_result.value());
+
+    auto const LEN_SIZE = sizeof(std::uint32_t);
+    std::vector<HeaderField> header;
+    offset = 0;
+    while (offset < decrypted.size()) {
+        const auto field_type = static_cast<HeaderFieldType>(decrypted.byte(offset + LEN_SIZE));
+        auto field_size = psafe3::load<std::endian::little>(decrypted.span<LEN_SIZE>(offset));
+        auto data_size = field_size + LEN_SIZE + 1;
+        if (field_type != HeaderFieldType::end_of_entry)
+            hmac.write(decrypted.span(offset + LEN_SIZE + 1, field_size));
+        offset += align_up(data_size, TWOFISH_SIZE);
+        if (field_type == HeaderFieldType::end_of_entry)
+            break;
+    }
+    std::vector<Record> database;
+    while (offset < decrypted.size()) {
+        if (decrypted.span<TWOFISH_SIZE>(offset) == DBEND) {
+            offset += TWOFISH_SIZE;
+            break;
+        }
+        const auto field_type = static_cast<RecordFieldType>(decrypted.byte(offset + LEN_SIZE));
+        auto field_size = psafe3::load<std::endian::little>(decrypted.span<LEN_SIZE>(offset));
+        auto data_size = field_size + LEN_SIZE + 1;
+        if (field_type != RecordFieldType::end_of_entry)
+            hmac.write(decrypted.span(offset + LEN_SIZE + 1, field_size));
+        offset += align_up(data_size, TWOFISH_SIZE);
+    }
+
+    auto computed_hmac = hmac.finish();
+    if (!computed_hmac)
+        return std::unexpected(computed_hmac.error());
+    if (*computed_hmac != contents.slice<SHA256_SIZE>(epilogue_offset + TWOFISH_SIZE))
+        return std::unexpected(psafe3::Error::hmac_mismatch);
 
     return Safe(contents.detach(), std::move(decrypted));
 }

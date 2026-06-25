@@ -58,9 +58,9 @@ void MappedFile::close()
     size_ = 0;
 }
 
-MappedMemory MappedFile::detach() noexcept
+psafe3::MappedMemory MappedFile::detach() noexcept
 {
-    MappedMemory region(base_, size_);
+    psafe3::MappedMemory region(base_, size_);
     base_ = 0;
     size_ = 0;
     return region;
