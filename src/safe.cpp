@@ -83,68 +83,6 @@ static const std::array<std::byte, 16> DBEND = {
 
 } // namespace
 
-psafe3_err safe_load_prologue(int fd, unsigned char* prologue)
-{
-    off_t ret;
-    ssize_t nread;
-
-    assert_fd(fd);
-    assert_ptr(prologue);
-
-    ret = lseek(fd, 0, SEEK_SET);
-    if (ret == -1) {
-        return gpg_err_code_from_errno(errno);
-    }
-
-    nread = read(fd, prologue, PROLOGUE_SIZE);
-    if (nread == -1) {
-        return gpg_err_code_from_errno(errno);
-    }
-    if (nread != PROLOGUE_SIZE) {
-        return gpg_err_code_from_errno(EIO);
-    }
-
-    if (memcmp(prologue + MAGIC_OFFSET, MAGIC.data(), MAGIC.size()) != 0) {
-        return gpg_err_code_from_errno(EINVAL);
-    }
-
-    return GPG_ERR_NO_ERROR;
-}
-
-unsigned char const* safe_salt(struct safe* s)
-{
-    return (unsigned char const*)s->file_image + SALT_OFFSET;
-}
-
-uint32_t safe_iter(struct safe* s)
-{
-    unsigned char const* b = (unsigned char const*)s->file_image + ITER_OFFSET;
-    uint32_t count = b[0] + (b[1] << 8) + (b[2] << 16) + (b[3] << 24);
-    return count;
-}
-
-unsigned char const* safe_pass_hash(struct safe* s)
-{
-    return (unsigned char const*)s->file_image + PASS_HASH_OFFSET;
-}
-
-unsigned char const* safe_b(struct safe* s, unsigned i)
-{
-    assert(i < 4);
-    static const size_t OFFSET_sets[4] = {
-        OFFSET_B1,
-        OFFSET_B2,
-        OFFSET_B3,
-        OFFSET_B4,
-    };
-    return (unsigned char const*)s->file_image + OFFSET_sets[i];
-}
-
-unsigned char const* safe_iv(struct safe* s)
-{
-    return (unsigned char const*)s->file_image + OFFSET_IV;
-}
-
 namespace psafe3 {
 
 std::expected<SecureBytes, std::error_code>
@@ -261,9 +199,17 @@ Safe::load(const std::filesystem::path& path,
         const auto field_type = static_cast<HeaderFieldType>(decrypted.byte(offset + LEN_SIZE));
         auto field_size = psafe3::load<std::endian::little>(decrypted.span<LEN_SIZE>(offset));
         auto data_size = field_size + LEN_SIZE + 1;
-        if (field_type != HeaderFieldType::end_of_entry)
+        auto block_size = align_up(data_size, TWOFISH_SIZE);
+        if (field_type != HeaderFieldType::end_of_entry) {
             hmac.write(decrypted.span(offset + LEN_SIZE + 1, field_size));
-        offset += align_up(data_size, TWOFISH_SIZE);
+            header.push_back(HeaderField {
+                .type = field_type,
+                .len = field_size,
+                .data = decrypted.span(offset + LEN_SIZE + 1, field_size),
+                .extent = decrypted.span(offset, block_size),
+            });
+        }
+        offset += block_size;
         if (field_type == HeaderFieldType::end_of_entry)
             break;
     }
@@ -273,12 +219,29 @@ Safe::load(const std::filesystem::path& path,
             offset += TWOFISH_SIZE;
             break;
         }
-        const auto field_type = static_cast<RecordFieldType>(decrypted.byte(offset + LEN_SIZE));
-        auto field_size = psafe3::load<std::endian::little>(decrypted.span<LEN_SIZE>(offset));
-        auto data_size = field_size + LEN_SIZE + 1;
-        if (field_type != RecordFieldType::end_of_entry)
-            hmac.write(decrypted.span(offset + LEN_SIZE + 1, field_size));
-        offset += align_up(data_size, TWOFISH_SIZE);
+        Record record;
+        size_t record_start = offset;
+        while (offset < decrypted.size()) {
+            const auto field_type = static_cast<RecordFieldType>(decrypted.byte(offset + LEN_SIZE));
+            auto field_size = psafe3::load<std::endian::little>(decrypted.span<LEN_SIZE>(offset));
+            auto data_size = field_size + LEN_SIZE + 1;
+            auto block_size = align_up(data_size, TWOFISH_SIZE);
+            if (field_type != RecordFieldType::end_of_entry) {
+                hmac.write(decrypted.span(offset + LEN_SIZE + 1, field_size));
+                record.fields.push_back(RecordField {
+                    .type = field_type,
+                    .len = field_size,
+                    .data = decrypted.span(offset + LEN_SIZE + 1, field_size),
+                    .extent = decrypted.span(offset, block_size),
+                });
+            }
+            offset += block_size;
+            if (field_type == RecordFieldType::end_of_entry)
+                break;
+        }
+        record.data = decrypted.span(record_start, offset - record_start);
+        record.extent = record.data;
+        database.push_back(std::move(record));
     }
 
     auto computed_hmac = hmac.finish();
@@ -287,6 +250,17 @@ Safe::load(const std::filesystem::path& path,
     if (*computed_hmac != contents.slice<SHA256_SIZE>(epilogue_offset + TWOFISH_SIZE))
         return std::unexpected(psafe3::Error::hmac_mismatch);
 
-    return Safe(contents.detach(), std::move(decrypted));
+    return Safe(contents.detach(), std::move(decrypted), std::move(header), std::move(database));
 }
+
+std::span<const HeaderField> Safe::header() const noexcept
+{
+    return header_;
+}
+
+std::span<const Record> Safe::database() const noexcept
+{
+    return database_;
+}
+
 } // namespace psafe3

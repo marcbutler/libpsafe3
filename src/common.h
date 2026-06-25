@@ -7,8 +7,6 @@
 #include <gcrypt.h>
 #include <gpg-error.h>
 
-#include <psafe3.h>
-
 // SHA-256 hash code size in bytes.
 #define SHA256_BYTES 32
 typedef unsigned char sha256_hash[SHA256_BYTES];

@@ -12,7 +12,7 @@ pkg_search_module(UUID REQUIRED uuid)
 
 include_directories(AFTER "${CMAKE_CURRENT_SOURCE_DIR}")
 
-set(LIB_SRC crypto.cpp mapped_file.cpp mapped_memory.cpp psafe.cpp pws3.cpp psafe3.cpp safe.cpp secure_bytes.cpp util.cpp)
+set(LIB_SRC crypto.cpp mapped_file.cpp mapped_memory.cpp pws3.cpp safe.cpp safeio.cpp secure_bytes.cpp util.cpp)
 
 # Build library objects for both static and shared libraries only once.
 add_library(psafe3_objlib OBJECT ${LIB_SRC})
