@@ -6,30 +6,16 @@
 
 #include "safe.h"
 #include "safeio.h"
-#include "utility.h"
 
 int main(int argc, char** argv)
 {
-    if (argc != 2 && argc != 3) {
-        std::cerr << "Usage: psafe3dump <file> [<password>]\n";
+    if (argc != 3) {
+        std::cerr << "Usage: psafe3dump <file> <password>\n";
         return 1;
     }
 
-    std::string pass;
-    if (argc == 3) {
-        pass = argv[2];
-    } else {
-        char buf[100];
-        size_t bufsz = sizeof(buf);
-        if (read_from_terminal("Password: ", buf, &bufsz) != 0) {
-            std::cerr << "No password read.\n";
-            return 1;
-        }
-        pass = buf;
-    }
-
-    const auto* pass_bytes = reinterpret_cast<const std::byte*>(pass.data());
-    std::vector<std::byte> pass_phrase(pass_bytes, pass_bytes + pass.size());
+    const auto* pass_bytes = reinterpret_cast<const std::byte*>(argv[2]);
+    std::vector<std::byte> pass_phrase(pass_bytes, pass_bytes + std::strlen(argv[2]));
 
     auto result = psafe3::Safe::load(argv[1], std::move(pass_phrase));
     if (!result) {

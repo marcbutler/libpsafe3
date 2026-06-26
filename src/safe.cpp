@@ -9,9 +9,8 @@
 #include "error.h"
 #include "gcrypt.h"
 #include "handle.h"
-#include "mapped_file.h"
+#include "mapped.h"
 #include "safe.h"
-#include "secure_bytes.h"
 #include "utility.h"
 
 // File format.

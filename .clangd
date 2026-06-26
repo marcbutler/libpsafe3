@@ -1,3 +1,10 @@
 CompileFlags:
-    Add:
-        - -I/opt/homebrew/include
+  CompilationDatabase: build
+  Add:
+    - -std=c++23
+    - -I/opt/homebrew/include
+    - -I/opt/homebrew/opt/ossp-uuid/include/ossp
+    - -Isrc
+
+Index:
+  Background: Build

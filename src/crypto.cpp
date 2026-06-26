@@ -1,6 +1,7 @@
 // https://github.com/marcbutler/libpsafe3/LICENSE
 
 #include <cstring>
+#include <new>
 
 #include "crypto.h"
 #include "gcrypt.h"
@@ -8,35 +9,73 @@
 
 namespace psafe3 {
 
+// SecureBytes
+
+SecureBytes::SecureBytes(size_t size)
+    : data_(gcry_malloc_secure(size))
+    , size_(size)
+{
+    if (!data_)
+        throw std::bad_alloc();
+}
+
+SecureBytes::~SecureBytes()
+{
+    if (data_)
+        gcry_free(data_);
+}
+
+SecureBytes::SecureBytes(SecureBytes&& other) noexcept
+    : data_(other.data_)
+    , size_(other.size_)
+{
+    other.data_ = nullptr;
+    other.size_ = 0;
+}
+
+SecureBytes& SecureBytes::operator=(SecureBytes&& other) noexcept
+{
+    if (this != &other) [[likely]] {
+        gcry_free(data_);
+        data_ = other.data_;
+        other.data_ = nullptr;
+        size_ = other.size_;
+        other.size_ = 0;
+    }
+    return *this;
+}
+
+std::byte* SecureBytes::data() noexcept { return static_cast<std::byte*>(data_); }
+std::byte* SecureBytes::data(size_t offset) noexcept { return static_cast<std::byte*>(data_) + offset; }
+const std::byte* SecureBytes::data() const noexcept { return static_cast<const std::byte*>(data_); }
+const std::byte* SecureBytes::data(size_t offset) const noexcept { return static_cast<const std::byte*>(data_) + offset; }
+size_t SecureBytes::size() const noexcept { return size_; }
+
+std::span<std::byte> SecureBytes::as_span() noexcept { return { static_cast<std::byte*>(data_), size_ }; }
+std::span<const std::byte> SecureBytes::as_span() const noexcept { return { static_cast<const std::byte*>(data_), size_ }; }
+std::span<std::byte> SecureBytes::span(size_t offset, size_t len) noexcept { return { static_cast<std::byte*>(data_) + offset, len }; }
+std::span<const std::byte> SecureBytes::span(size_t offset, size_t len) const noexcept { return { static_cast<const std::byte*>(data_) + offset, len }; }
+
+// Crypto init
+
 namespace {
 
     std::error_code do_init()
     {
-        if (!gcry_check_version(GCRYPT_VERSION)) {
+        if (!gcry_check_version(GCRYPT_VERSION))
             return make_error_code(GPG_ERR_GENERAL);
-        }
 
         gcry_error_t err;
         err = gcry_control(GCRYCTL_SUSPEND_SECMEM_WARN);
-        if (err) {
-            return make_error_code(err);
-        }
+        if (err) return make_error_code(err);
         err = gcry_control(GCRYCTL_INIT_SECMEM, 1);
-        if (err) {
-            return make_error_code(err);
-        }
+        if (err) return make_error_code(err);
         err = gcry_control(GCRYCTL_AUTO_EXPAND_SECMEM, 1);
-        if (err) {
-            return make_error_code(err);
-        }
+        if (err) return make_error_code(err);
         err = gcry_control(GCRYCTL_RESUME_SECMEM_WARN);
-        if (err) {
-            return make_error_code(err);
-        }
+        if (err) return make_error_code(err);
         err = gcry_control(GCRYCTL_INITIALIZATION_FINISHED, 0);
-        if (err) {
-            return make_error_code(err);
-        }
+        if (err) return make_error_code(err);
 
         struct CleanupOnTermination {
             ~CleanupOnTermination()
@@ -48,7 +87,7 @@ namespace {
         };
         static CleanupOnTermination cleanup;
 
-        return { };
+        return {};
     }
 
     std::error_code ensure_init()
@@ -59,19 +98,19 @@ namespace {
 
 } // namespace
 
+// stretch_key / sha256
+
 std::expected<SecureBytes, std::error_code>
 stretch_key(std::span<const std::byte> pass,
     std::span<const std::byte, SHA256_SIZE> salt, uint32_t iterations)
 {
-    if (auto err = ensure_init(); err) {
+    if (auto err = ensure_init(); err)
         return std::unexpected(err);
-    }
 
     psafe3::Handle<gcry_md_hd_t, gcry_md_close> hd;
     gcry_error_t err = gcry_md_open(&hd.actual, GCRY_MD_SHA256, GCRY_MD_FLAG_SECURE);
-    if (err) {
+    if (err)
         return std::unexpected(make_error_code(err));
-    }
 
     gcry_md_write(hd(), pass.data(), pass.size());
     gcry_md_write(hd(), salt.data(), salt.size());
@@ -91,31 +130,29 @@ stretch_key(std::span<const std::byte> pass,
 std::expected<std::array<std::byte, SHA256_SIZE>, std::error_code>
 sha256(std::span<const std::byte> data)
 {
-    if (auto err = ensure_init(); err) {
+    if (auto err = ensure_init(); err)
         return std::unexpected(err);
-    }
 
     psafe3::Handle<gcry_md_hd_t, gcry_md_close> hd;
     gcry_error_t err = gcry_md_open(&hd.actual, GCRY_MD_SHA256, GCRY_MD_FLAG_SECURE);
-    if (err) {
+    if (err)
         return std::unexpected(make_error_code(err));
-    }
 
     gcry_md_write(hd(), data.data(), data.size());
     err = gcry_md_final(hd());
-    if (err) {
+    if (err)
         return std::unexpected(make_error_code(err));
-    }
 
     const auto* hash = gcry_md_read(hd(), 0);
-    if (!hash) {
+    if (!hash)
         return std::unexpected(make_error_code(GPG_ERR_GENERAL));
-    }
 
     std::array<std::byte, SHA256_SIZE> result;
     std::memcpy(result.data(), hash, SHA256_SIZE);
     return result;
 }
+
+// SHA256HMA
 
 SHA256HMA::~SHA256HMA()
 {

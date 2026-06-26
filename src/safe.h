@@ -9,8 +9,8 @@
 
 #include <cstdint>
 
-#include "mapped_memory.h"
-#include "secure_bytes.h"
+#include "crypto.h"
+#include "mapped.h"
 
 namespace psafe3 {
 

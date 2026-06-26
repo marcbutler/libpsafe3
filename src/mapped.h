@@ -8,7 +8,39 @@
 #include <span>
 #include <system_error>
 
-#include "mapped_memory.h"
+#include <sys/mman.h>
+
+namespace psafe3 {
+
+enum class MemoryAccess : int {
+    None = PROT_NONE,
+    Read = PROT_READ,
+    Write = PROT_WRITE,
+    Exec = PROT_EXEC
+};
+
+class MappedFile;
+
+class MappedMemory {
+public:
+    ~MappedMemory();
+    MappedMemory(MappedMemory&&) noexcept;
+    MappedMemory& operator=(MappedMemory&&) noexcept;
+    MappedMemory(const MappedMemory&) = delete;
+    MappedMemory& operator=(const MappedMemory&) = delete;
+
+    MemoryAccess access() const noexcept { return MemoryAccess(access_); }
+    const std::byte* data() const noexcept;
+    size_t size() const noexcept;
+    std::span<const std::byte> span() const noexcept;
+
+private:
+    friend class MappedFile;
+    MappedMemory(uintptr_t base, size_t size, MemoryAccess access) noexcept;
+    uintptr_t base_;
+    size_t size_;
+    int access_;
+};
 
 class MappedFile {
 public:
@@ -21,7 +53,7 @@ public:
     MappedFile& operator=(const MappedFile&) = delete;
 
     void close();
-    psafe3::MappedMemory detach() noexcept;
+    MappedMemory detach() noexcept;
     uintptr_t base() const noexcept;
     size_t size() const noexcept;
     std::span<const std::byte> slice(size_t offset, size_t length) const noexcept;
@@ -39,3 +71,5 @@ private:
     uintptr_t base_;
     size_t size_;
 };
+
+} // namespace psafe3

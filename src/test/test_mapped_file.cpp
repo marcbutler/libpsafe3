@@ -4,8 +4,9 @@
 #include <cerrno>
 #include <cstring>
 
-#include "mapped_file.h"
-#include "mapped_memory.h"
+#include "mapped.h"
+
+using psafe3::MappedFile;
 
 static const char TEST_PSAFE3[] = TEST_DATA_DIR "/test.psafe3";
 static const size_t TEST_PSAFE3_SIZE = 824;

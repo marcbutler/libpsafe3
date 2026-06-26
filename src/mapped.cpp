@@ -1,17 +1,64 @@
 // https://github.com/marcbutler/libpsafe3/LICENSE
 
 #include <cerrno>
-#include <cstring>
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <syslog.h>
 #include <system_error>
 #include <unistd.h>
+#include <utility>
 
-#include "mapped_file.h"
-#include "mapped_memory.h"
+#include "mapped.h"
 
+namespace psafe3 {
+
+// MappedMemory
+
+MappedMemory::MappedMemory(uintptr_t base, size_t size, MemoryAccess access) noexcept
+    : base_(base)
+    , size_(size)
+    , access_(static_cast<int>(access))
+{
+}
+
+MappedMemory::MappedMemory(MappedMemory&& other) noexcept
+    : base_(other.base_)
+    , size_(other.size_)
+    , access_(other.access_)
+{
+    other.base_ = 0;
+    other.size_ = 0;
+}
+
+MappedMemory& MappedMemory::operator=(MappedMemory&& other) noexcept
+{
+    MappedMemory tmp(std::move(other));
+    std::swap(base_, tmp.base_);
+    std::swap(size_, tmp.size_);
+    std::swap(access_, tmp.access_);
+    return *this;
+}
+
+MappedMemory::~MappedMemory()
+{
+    if (base_ != 0)
+        munmap(reinterpret_cast<void*>(base_), size_);
+}
+
+const std::byte* MappedMemory::data() const noexcept
+{
+    return reinterpret_cast<const std::byte*>(base_);
+}
+
+size_t MappedMemory::size() const noexcept { return size_; }
+
+std::span<const std::byte> MappedMemory::span() const noexcept
+{
+    return { data(), size_ };
+}
+
+// MappedFile
 
 MappedFile::MappedFile(uintptr_t base, size_t size) noexcept
     : base_(base)
@@ -50,15 +97,15 @@ void MappedFile::close()
 {
     if (base_ == 0)
         return;
-    if (munmap((void*)base_, size_) != 0)
+    if (munmap(reinterpret_cast<void*>(base_), size_) != 0)
         throw std::system_error(errno, std::system_category());
     base_ = 0;
     size_ = 0;
 }
 
-psafe3::MappedMemory MappedFile::detach() noexcept
+MappedMemory MappedFile::detach() noexcept
 {
-    psafe3::MappedMemory region(base_, size_);
+    MappedMemory region(base_, size_, MemoryAccess::Read);
     base_ = 0;
     size_ = 0;
     return region;
@@ -86,10 +133,12 @@ std::expected<MappedFile, std::error_code> MappedFile::open(const char* path)
         return std::unexpected(err);
     }
 
-    void* ptr = mmap(nullptr, (size_t)st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+    void* ptr = mmap(nullptr, static_cast<size_t>(st.st_size), PROT_READ, MAP_PRIVATE, fd, 0);
     ::close(fd);
     if (ptr == MAP_FAILED)
         return std::unexpected(std::error_code(errno, std::system_category()));
 
-    return MappedFile((uintptr_t)ptr, (size_t)st.st_size);
+    return MappedFile(reinterpret_cast<uintptr_t>(ptr), static_cast<size_t>(st.st_size));
 }
+
+} // namespace psafe3

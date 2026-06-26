@@ -1,18 +1,7 @@
-find_package(PkgConfig REQUIRED)
-
-pkg_check_modules(LIBGCRYPT libgcrypt REQUIRED)
-find_path(LIBGCRYPT_INCLUDE_DIR NAMES "gcrypt.h")
-find_library(LIBGCRYPT_LIBRARY NAMES "gcrypt")
-
-pkg_check_modules(LIBGPG_ERROR gpg-error REQUIRED)
-find_path(LIBGPG_ERROR_INCLUDE_DIR NAMES "gpg-error.h")
-find_library(LIBGPG_ERROR_LIBRARY NAMES "gpg-error")
-
-pkg_search_module(UUID REQUIRED uuid)
 
 include_directories(AFTER "${CMAKE_CURRENT_SOURCE_DIR}")
 
-set(LIB_SRC crypto.cpp mapped_file.cpp mapped_memory.cpp safe.cpp safeio.cpp secure_bytes.cpp util.cpp)
+set(LIB_SRC crypto.cpp mapped.cpp safe.cpp safeio.cpp)
 
 # Build library objects for both static and shared libraries only once.
 add_library(psafe3_objlib OBJECT ${LIB_SRC})

@@ -100,5 +100,3 @@ inline bool operator!=(std::span<const T, N> a,
 static constexpr size_t TWOFISH_SIZE = 16;
 
 } // namespace psafe3
-
-int read_from_terminal(const char* prompt, char* buf, size_t* bufsize);
