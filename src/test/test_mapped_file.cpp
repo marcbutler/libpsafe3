@@ -16,7 +16,7 @@ static const unsigned char PWS3_MAGIC[] = {'P', 'W', 'S', '3'};
 
 static void test_open_valid()
 {
-    auto result = MappedFile::open(TEST_PSAFE3);
+    auto result = MappedFile::open(TEST_PSAFE3, psafe3::MemoryAccess::Read);
     assert(result.has_value());
 
     auto &mf = result.value();
@@ -26,7 +26,7 @@ static void test_open_valid()
 
 static void test_file_contents()
 {
-    auto result = MappedFile::open(TEST_PSAFE3);
+    auto result = MappedFile::open(TEST_PSAFE3, psafe3::MemoryAccess::Read);
     assert(result.has_value());
 
     const unsigned char *p = (const unsigned char *)result.value().base();
@@ -35,14 +35,14 @@ static void test_file_contents()
 
 static void test_open_nonexistent()
 {
-    auto result = MappedFile::open("/nonexistent/path/file.psafe3");
+    auto result = MappedFile::open("/nonexistent/path/file.psafe3", psafe3::MemoryAccess::Read);
     assert(!result.has_value());
     assert(result.error() == std::error_code(ENOENT, std::system_category()));
 }
 
 static void test_close()
 {
-    auto result = MappedFile::open(TEST_PSAFE3);
+    auto result = MappedFile::open(TEST_PSAFE3, psafe3::MemoryAccess::Read);
     assert(result.has_value());
 
     result.value().close();
@@ -53,7 +53,7 @@ static void test_close()
 
 static void test_close_idempotent()
 {
-    auto result = MappedFile::open(TEST_PSAFE3);
+    auto result = MappedFile::open(TEST_PSAFE3, psafe3::MemoryAccess::Read);
     assert(result.has_value());
 
     result.value().close();
@@ -62,7 +62,7 @@ static void test_close_idempotent()
 
 static void test_move_ctor()
 {
-    auto result = MappedFile::open(TEST_PSAFE3);
+    auto result = MappedFile::open(TEST_PSAFE3, psafe3::MemoryAccess::Read);
     assert(result.has_value());
 
     uintptr_t base = result.value().base();
@@ -78,8 +78,8 @@ static void test_move_ctor()
 
 static void test_move_assign()
 {
-    auto r1 = MappedFile::open(TEST_PSAFE3);
-    auto r2 = MappedFile::open(TEST_PSAFE3);
+    auto r1 = MappedFile::open(TEST_PSAFE3, psafe3::MemoryAccess::Read);
+    auto r2 = MappedFile::open(TEST_PSAFE3, psafe3::MemoryAccess::Read);
     assert(r1.has_value());
     assert(r2.has_value());
 
@@ -96,7 +96,7 @@ static void test_move_assign()
 
 static void test_detach()
 {
-    auto result = MappedFile::open(TEST_PSAFE3);
+    auto result = MappedFile::open(TEST_PSAFE3, psafe3::MemoryAccess::Read);
     assert(result.has_value());
 
     uintptr_t orig_base = result.value().base();
@@ -120,7 +120,7 @@ static void test_detach()
 
 static void test_slice()
 {
-    auto result = MappedFile::open(TEST_PSAFE3);
+    auto result = MappedFile::open(TEST_PSAFE3, psafe3::MemoryAccess::Read);
     assert(result.has_value());
 
     auto &mf = result.value();
@@ -142,7 +142,7 @@ static void test_slice()
 
 static void test_move_assign_self()
 {
-    auto result = MappedFile::open(TEST_PSAFE3);
+    auto result = MappedFile::open(TEST_PSAFE3, psafe3::MemoryAccess::Read);
     assert(result.has_value());
 
     uintptr_t base = result.value().base();

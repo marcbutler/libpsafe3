@@ -110,7 +110,7 @@ std::expected<Safe, std::error_code>
 Safe::load(const std::filesystem::path& path,
     const std::vector<std::byte> pass_phrase)
 {
-    auto mapped_file = MappedFile::open(path.c_str());
+    auto mapped_file = MappedFile::open(path, MemoryAccess::Read);
     if (!mapped_file) {
         return std::unexpected(mapped_file.error());
     }
@@ -192,8 +192,8 @@ Safe::load(const std::filesystem::path& path,
         const auto field_type = static_cast<HeaderFieldType>(decrypted.byte(offset + LEN_SIZE));
         auto field_size = psafe3::load<std::endian::little>(decrypted.span<LEN_SIZE>(offset));
         auto data_size = field_size + LEN_SIZE + 1;
-        auto block_size = align_up(data_size, TWOFISH_SIZE);
-        if (field_type != HeaderFieldType::end_of_entry) {
+        auto block_size = round_up_to(data_size, TWOFISH_SIZE);
+        if (field_type != HeaderFieldType::END_OF_ENTRY) {
             hmac.write(decrypted.span(offset + LEN_SIZE + 1, field_size));
             header.push_back(HeaderField {
                 .type = field_type,
@@ -203,7 +203,7 @@ Safe::load(const std::filesystem::path& path,
             });
         }
         offset += block_size;
-        if (field_type == HeaderFieldType::end_of_entry)
+        if (field_type == HeaderFieldType::END_OF_ENTRY)
             break;
     }
     std::vector<Record> database;
@@ -218,8 +218,8 @@ Safe::load(const std::filesystem::path& path,
             const auto field_type = static_cast<RecordFieldType>(decrypted.byte(offset + LEN_SIZE));
             auto field_size = psafe3::load<std::endian::little>(decrypted.span<LEN_SIZE>(offset));
             auto data_size = field_size + LEN_SIZE + 1;
-            auto block_size = align_up(data_size, TWOFISH_SIZE);
-            if (field_type != RecordFieldType::end_of_entry) {
+            auto block_size = round_up_to(data_size, TWOFISH_SIZE);
+            if (field_type != RecordFieldType::END_OF_ENTRY) {
                 hmac.write(decrypted.span(offset + LEN_SIZE + 1, field_size));
                 record.fields.push_back(RecordField {
                     .type = field_type,
@@ -229,7 +229,7 @@ Safe::load(const std::filesystem::path& path,
                 });
             }
             offset += block_size;
-            if (field_type == RecordFieldType::end_of_entry)
+            if (field_type == RecordFieldType::END_OF_ENTRY)
                 break;
         }
         record.data = decrypted.span(record_start, offset - record_start);

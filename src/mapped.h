@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <expected>
+#include <filesystem>
 #include <span>
 #include <system_error>
 
@@ -44,7 +45,7 @@ private:
 
 class MappedFile {
 public:
-    static std::expected<MappedFile, std::error_code> open(const char* path);
+    static std::expected<MappedFile, std::error_code> open(const std::filesystem::path& path, MemoryAccess access);
 
     ~MappedFile();
     MappedFile(MappedFile&&) noexcept;
@@ -67,9 +68,10 @@ public:
     }
 
 private:
-    MappedFile(uintptr_t base, size_t size) noexcept;
+    MappedFile(uintptr_t base, size_t size, MemoryAccess access) noexcept;
     uintptr_t base_;
     size_t size_;
+    MemoryAccess access_;
 };
 
 } // namespace psafe3

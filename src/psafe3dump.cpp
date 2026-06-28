@@ -1,6 +1,6 @@
 // https://github.com/marcbutler/libpsafe3/LICENSE
 
-#include <iomanip>
+#include <format>
 #include <iostream>
 #include <vector>
 
@@ -24,25 +24,20 @@ int main(int argc, char** argv)
     }
     auto& safe = result.value();
 
-    auto print_field = [](uint8_t type, uint32_t len, auto&& print_value) {
-        std::cout << "type=" << std::hex << std::setfill('0') << std::setw(2)
-                  << static_cast<unsigned>(type) << std::dec << std::setfill(' ')
-                  << "  len=" << std::right << std::setw(3) << len
-                  << "  ";
-        print_value();
-        std::cout << '\n';
+    auto print_field = [](uint8_t type, uint32_t len, std::string value) {
+        std::println(std::cout, "type={:02x}  len={:3}  {}", type, len, value);
     };
 
     for (const auto& field : safe.header()) {
         print_field(static_cast<uint8_t>(field.type), field.len,
-            [&] { psafe3::header_field_as_text(field, std::cout); });
+            psafe3::header_field_as_text(field));
     }
 
     for (const auto& record : safe.database()) {
-        std::cout << '\n';
+        std::println(std::cout, "");
         for (const auto& field : record.fields) {
             print_field(static_cast<uint8_t>(field.type), field.len,
-                [&] { psafe3::record_field_as_text(field, std::cout); });
+                psafe3::record_field_as_text(field));
         }
     }
 

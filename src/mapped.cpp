@@ -2,6 +2,7 @@
 
 #include <cerrno>
 #include <fcntl.h>
+#include <filesystem>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <syslog.h>
@@ -60,9 +61,10 @@ std::span<const std::byte> MappedMemory::span() const noexcept
 
 // MappedFile
 
-MappedFile::MappedFile(uintptr_t base, size_t size) noexcept
+MappedFile::MappedFile(uintptr_t base, size_t size, MemoryAccess access) noexcept
     : base_(base)
     , size_(size)
+    , access_(access)
 {
 }
 
@@ -120,9 +122,9 @@ std::span<const std::byte> MappedFile::slice(size_t offset, size_t length) const
     return { reinterpret_cast<const std::byte*>(base_) + offset, length };
 }
 
-std::expected<MappedFile, std::error_code> MappedFile::open(const char* path)
+std::expected<MappedFile, std::error_code> MappedFile::open(const std::filesystem::path& path, MemoryAccess access)
 {
-    int fd = ::open(path, O_RDONLY);
+    int fd = ::open(path.c_str(), O_RDONLY);
     if (fd < 0)
         return std::unexpected(std::error_code(errno, std::system_category()));
 
@@ -133,12 +135,12 @@ std::expected<MappedFile, std::error_code> MappedFile::open(const char* path)
         return std::unexpected(err);
     }
 
-    void* ptr = mmap(nullptr, static_cast<size_t>(st.st_size), PROT_READ, MAP_PRIVATE, fd, 0);
+    void* ptr = ::mmap(nullptr, static_cast<size_t>(st.st_size), static_cast<int>(access), MAP_PRIVATE, fd, 0);
     ::close(fd);
     if (ptr == MAP_FAILED)
         return std::unexpected(std::error_code(errno, std::system_category()));
 
-    return MappedFile(reinterpret_cast<uintptr_t>(ptr), static_cast<size_t>(st.st_size));
+    return MappedFile(reinterpret_cast<uintptr_t>(ptr), static_cast<size_t>(st.st_size), access);
 }
 
 } // namespace psafe3
