@@ -3,8 +3,8 @@
 
 #include <array>
 #include <cstddef>
+#include <cstdio>
 #include <expected>
-#include <new>
 #include <span>
 #include <system_error>
 
