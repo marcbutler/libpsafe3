@@ -4,6 +4,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdio>
+#include <cstdint>
 #include <expected>
 #include <span>
 #include <system_error>
