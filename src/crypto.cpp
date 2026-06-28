@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <cstring>
+#include <cstdint>
 #include <new>
 #include <system_error>
 
