@@ -6,6 +6,7 @@
 #include <system_error>
 
 #include "crypto.h"
+#include "error.h"
 #include "gcrypt.h"
 #include "handle.h"
 

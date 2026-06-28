@@ -1,7 +1,10 @@
 // https://github.com/marcbutler/libpsafe3/LICENSE
 
+#include <cstring>
+#include <cstring>
 #include <format>
 #include <iostream>
+#include <print>
 #include <vector>
 
 #include "safe.h"

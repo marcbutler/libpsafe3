@@ -6,13 +6,14 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    env:
+      CC: gcc-14
+      CXX: g++-14
 
     steps:
-      - name: Install libgcrypt
-        run: sudo apt install -y libgcrypt-dev
-      - name: Install uuid-dev
-        run: sudo apt install -y uuid-dev
+      - name: Install dependencies
+        run: sudo apt install -y g++-14 libgcrypt-dev uuid-dev
       - name: Checkout
         uses: actions/checkout@v4.2.2
       - name: Build
