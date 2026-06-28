@@ -11,8 +11,6 @@
 
 #include <gcrypt.h>
 
-#include "error.h"
-
 namespace psafe3 {
 
 class SecureBytes {
